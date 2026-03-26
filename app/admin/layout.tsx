@@ -1,14 +1,4 @@
-import Link from "next/link";
-
-const navItems = [
-  { href: "/admin/users", label: "User Management", enabled: true },
-  { href: "/admin/operators/approval", label: "Operator Approval", enabled: true },
-  { href: "#", label: "Route & City", enabled: false },
-  { href: "#", label: "Commission & Finance", enabled: false },
-  { href: "#", label: "Content", enabled: false },
-  { href: "#", label: "Support & Disputes", enabled: false },
-  { href: "#", label: "Analytics", enabled: false },
-];
+import { SideNavigation } from "./components/side-navigation";
 
 export default function AdminLayout({
   children,
@@ -30,28 +20,7 @@ export default function AdminLayout({
             </p>
           </div>
 
-          <nav className="mt-8 space-y-2">
-            {navItems.map((item) =>
-              item.enabled ? (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex items-center justify-between rounded-2xl bg-amber-300 px-4 py-3 text-sm font-medium text-stone-950 transition hover:bg-amber-200"
-                >
-                  <span>{item.label}</span>
-                  <span>Open</span>
-                </Link>
-              ) : (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 px-4 py-3 text-sm text-stone-400"
-                >
-                  <span>{item.label}</span>
-                  <span>Soon</span>
-                </div>
-              )
-            )}
-          </nav>
+          <SideNavigation />
         </aside>
 
         <div className="flex-1">{children}</div>
