@@ -483,6 +483,84 @@ export async function setPassengerStatus(id: string, status: AccountStatus) {
   );
 }
 
+function buildId(prefix: string) {
+  return `${prefix}-${Date.now().toString().slice(-6)}`;
+}
+
+export async function createPassenger(data: {
+  fullName: string;
+  phone: string;
+  email: string;
+}) {
+  const db = await getDb();
+  await db.collection<PassengerDocument>(passengersCollectionName).insertOne({
+    id: buildId("PAX"),
+    fullName: data.fullName,
+    phone: data.phone,
+    email: data.email,
+    tripsCompleted: 0,
+    lastBooking: new Date().toISOString(),
+    status: "pending_review",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+}
+
+export async function createOperator(data: {
+  companyName: string;
+  contactName: string;
+  phone: string;
+}) {
+  const db = await getDb();
+  await db.collection<OperatorDocument>(operatorsCollectionName).insertOne({
+    id: buildId("OP"),
+    companyName: data.companyName,
+    contactName: data.contactName,
+    phone: data.phone,
+    activeRoutes: 0,
+    status: "pending_review",
+    verification: "pending",
+    submittedAt: new Date().toISOString(),
+    documentsComplete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+}
+
+export async function createStaff(data: {
+  fullName: string;
+  email: string;
+  role: StaffRole;
+}) {
+  const db = await getDb();
+  await db.collection<StaffDocument>(staffCollectionName).insertOne({
+    id: buildId("ADM"),
+    fullName: data.fullName,
+    email: data.email,
+    role: data.role,
+    accessScope: "Pending scope definition",
+    lastSignIn: new Date().toISOString(),
+    status: "pending_review",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+}
+
+export async function deletePassenger(id: string) {
+  const db = await getDb();
+  await db.collection<PassengerDocument>(passengersCollectionName).deleteOne({ id });
+}
+
+export async function deleteOperator(id: string) {
+  const db = await getDb();
+  await db.collection<OperatorDocument>(operatorsCollectionName).deleteOne({ id });
+}
+
+export async function deleteStaff(id: string) {
+  const db = await getDb();
+  await db.collection<StaffDocument>(staffCollectionName).deleteOne({ id });
+}
+
 export async function setStaffStatus(id: string, status: AccountStatus) {
   const db = await getDb();
 

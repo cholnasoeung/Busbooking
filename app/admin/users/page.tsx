@@ -8,6 +8,12 @@ import {
   type StaffRecord,
 } from "@/lib/admin-user-management";
 import {
+  createOperatorAction,
+  createPassengerAction,
+  createStaffAction,
+  deleteOperatorAction,
+  deletePassengerAction,
+  deleteStaffAction,
   rejectOperatorAction,
   restoreOperatorAction,
   suspendOperatorAction,
@@ -166,6 +172,112 @@ function SectionCard({
   );
 }
 
+function CreatePassengerForm() {
+  return (
+    <form action={createPassengerAction} className="space-y-2 text-xs">
+      <p className="text-sm font-semibold text-stone-700">Quick add passenger</p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          name="fullName"
+          required
+          placeholder="Full name"
+          className="flex-1 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <input
+          name="phone"
+          required
+          placeholder="Phone"
+          className="w-32 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <input
+          name="email"
+          required
+          placeholder="Email"
+          className="w-40 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <button
+          type="submit"
+          className="rounded-full bg-amber-300 px-4 py-2 text-xs font-semibold text-stone-900 transition hover:bg-amber-200"
+        >
+          Add
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function CreateOperatorForm() {
+  return (
+    <form action={createOperatorAction} className="space-y-2 text-xs">
+      <p className="text-sm font-semibold text-stone-700">Quick add operator</p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          name="companyName"
+          required
+          placeholder="Company"
+          className="flex-1 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <input
+          name="contactName"
+          required
+          placeholder="Contact"
+          className="w-40 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <input
+          name="phone"
+          required
+          placeholder="Phone"
+          className="w-32 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <button
+          type="submit"
+          className="rounded-full bg-amber-300 px-4 py-2 text-xs font-semibold text-stone-900 transition hover:bg-amber-200"
+        >
+          Add
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function CreateStaffForm() {
+  return (
+    <form action={createStaffAction} className="space-y-2 text-xs">
+      <p className="text-sm font-semibold text-stone-700">Quick add staff</p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          name="fullName"
+          required
+          placeholder="Full name"
+          className="flex-1 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <input
+          name="email"
+          required
+          placeholder="Email"
+          type="email"
+          className="w-40 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        />
+        <select
+          name="role"
+          className="w-36 rounded-full border border-stone-200 px-4 py-2 text-xs focus:border-amber-300"
+        >
+          <option value="super_admin">Super admin</option>
+          <option value="ops_admin">Ops admin</option>
+          <option value="support_admin">Support</option>
+          <option value="finance_admin">Finance</option>
+        </select>
+        <button
+          type="submit"
+          className="rounded-full bg-amber-300 px-4 py-2 text-xs font-semibold text-stone-900 transition hover:bg-amber-200"
+        >
+          Add
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function PassengerTable({ records }: { records: PassengerRecord[] }) {
   return (
     <div className="overflow-hidden rounded-[24px] border border-stone-200">
@@ -203,7 +315,8 @@ function PassengerTable({ records }: { records: PassengerRecord[] }) {
                     {formatStatus(record.status)}
                   </span>
                 </td>
-                <td className="px-4 py-4">
+              <td className="px-4 py-4">
+                <div className="flex flex-wrap gap-2">
                   <form action={updatePassengerStatusAction}>
                     <input type="hidden" name="id" value={record.id} />
                     <input
@@ -218,13 +331,23 @@ function PassengerTable({ records }: { records: PassengerRecord[] }) {
                       className="rounded-full bg-stone-950 px-4 py-2 text-xs font-semibold text-stone-50 transition hover:bg-stone-800"
                     >
                       {record.status === "suspended"
-                        ? "Restore account"
+                        ? "Restore"
                         : "Suspend"}
                     </button>
                   </form>
-                </td>
-              </tr>
-            ))
+                  <form action={deletePassengerAction}>
+                    <input type="hidden" name="id" value={record.id} />
+                    <button
+                      type="submit"
+                      className="rounded-full border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-500 transition hover:border-rose-400 hover:text-rose-500"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          ))
           ) : (
             <tr>
               <td colSpan={6} className="px-4 py-10 text-center text-stone-500">
@@ -284,7 +407,7 @@ function OperatorTable({ records }: { records: OperatorRecord[] }) {
                 <td className="px-4 py-4">
                   {record.documentsComplete ? "Complete" : "Missing files"}
                 </td>
-                <td className="px-4 py-4">
+               <td className="px-4 py-4">
                   <div className="flex flex-wrap gap-2">
                     {record.verification === "pending" ? (
                       <>
@@ -299,38 +422,47 @@ function OperatorTable({ records }: { records: OperatorRecord[] }) {
                         </form>
                         <form action={rejectOperatorAction}>
                           <input type="hidden" name="id" value={record.id} />
-                          <button
-                            type="submit"
-                            className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-500"
-                          >
-                            Reject
-                          </button>
-                        </form>
-                      </>
-                    ) : record.status === "suspended" ? (
-                      <form action={restoreOperatorAction}>
-                        <input type="hidden" name="id" value={record.id} />
                         <button
+                          type="submit"
+                          className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-500"
+                        >
+                          Reject
+                        </button>
+                      </form>
+                    </>
+                  ) : record.status === "suspended" ? (
+                    <form action={restoreOperatorAction}>
+                      <input type="hidden" name="id" value={record.id} />
+                      <button
                           type="submit"
                           className="rounded-full bg-stone-950 px-4 py-2 text-xs font-semibold text-stone-50 transition hover:bg-stone-800"
                         >
                           Re-open review
-                        </button>
-                      </form>
-                    ) : (
-                      <form action={suspendOperatorAction}>
-                        <input type="hidden" name="id" value={record.id} />
-                        <button
-                          type="submit"
-                          className="rounded-full bg-stone-950 px-4 py-2 text-xs font-semibold text-stone-50 transition hover:bg-stone-800"
-                        >
-                          Suspend
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </td>
-              </tr>
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={suspendOperatorAction}>
+                      <input type="hidden" name="id" value={record.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-stone-950 px-4 py-2 text-xs font-semibold text-stone-50 transition hover:bg-stone-800"
+                      >
+                        Suspend
+                      </button>
+                    </form>
+                  )}
+                  <form action={deleteOperatorAction}>
+                    <input type="hidden" name="id" value={record.id} />
+                    <button
+                      type="submit"
+                      className="rounded-full border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-500 transition hover:border-rose-400 hover:text-rose-500"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
             ))
           ) : (
             <tr>
@@ -384,24 +516,35 @@ function StaffTable({ records }: { records: StaffRecord[] }) {
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  <form action={updateStaffStatusAction}>
-                    <input type="hidden" name="id" value={record.id} />
-                    <input
-                      type="hidden"
-                      name="status"
-                      value={
-                        record.status === "suspended" ? "active" : "suspended"
-                      }
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-full bg-stone-950 px-4 py-2 text-xs font-semibold text-stone-50 transition hover:bg-stone-800"
-                    >
-                      {record.status === "suspended"
-                        ? "Restore access"
-                        : "Suspend"}
-                    </button>
-                  </form>
+                  <div className="flex flex-wrap gap-2">
+                    <form action={updateStaffStatusAction}>
+                      <input type="hidden" name="id" value={record.id} />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={
+                          record.status === "suspended" ? "active" : "suspended"
+                        }
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-stone-950 px-4 py-2 text-xs font-semibold text-stone-50 transition hover:bg-stone-800"
+                      >
+                        {record.status === "suspended"
+                          ? "Restore"
+                          : "Suspend"}
+                      </button>
+                    </form>
+                    <form action={deleteStaffAction}>
+                      <input type="hidden" name="id" value={record.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-500 transition hover:border-rose-400 hover:text-rose-500"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))
@@ -511,6 +654,9 @@ export default async function AdminUsersPage({
             title="Manage passenger profiles and risky accounts"
             description="Review activity, suspend passenger access when needed, and restore accounts after manual checks."
           >
+            <div className="mb-4">
+              <CreatePassengerForm />
+            </div>
             <PassengerTable records={data.passengers} />
           </SectionCard>
         ) : null}
@@ -521,6 +667,9 @@ export default async function AdminUsersPage({
             title="Manage bus companies and verification status"
             description="Approve operators when documents are ready, reject weak submissions, and suspend verified operators when compliance issues appear."
           >
+            <div className="mb-4">
+              <CreateOperatorForm />
+            </div>
             <OperatorTable records={data.operators} />
           </SectionCard>
         ) : null}
@@ -531,6 +680,9 @@ export default async function AdminUsersPage({
             title="Manage staff and admin permissions"
             description="Keep platform access controlled by reviewing internal accounts and suspending staff profiles that should no longer stay active."
           >
+            <div className="mb-4">
+              <CreateStaffForm />
+            </div>
             <StaffTable records={data.staff} />
           </SectionCard>
         ) : null}

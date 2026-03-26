@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  createOperator,
+  createPassenger,
+  createStaff,
+  deleteOperator,
+  deletePassenger,
+  deleteStaff,
   rejectOperator,
   restoreOperator,
   setPassengerStatus,
@@ -10,6 +16,7 @@ import {
   suspendOperator,
   verifyOperator,
   type AccountStatus,
+  type StaffRole,
 } from "@/lib/admin-user-management";
 
 function parseAccountStatus(value: FormDataEntryValue | null): AccountStatus {
@@ -89,5 +96,90 @@ export async function restoreOperatorAction(formData: FormData) {
   }
 
   await restoreOperator(id);
+  revalidatePath("/admin/users");
+}
+
+function parseRole(value: FormDataEntryValue | null): StaffRole {
+  if (
+    value === "super_admin" ||
+    value === "finance_admin" ||
+    value === "support_admin" ||
+    value === "ops_admin"
+  ) {
+    return value;
+  }
+
+  return "ops_admin";
+}
+
+export async function createPassengerAction(formData: FormData) {
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (!fullName || !phone || !email) {
+    return;
+  }
+
+  await createPassenger({ fullName, phone, email });
+  revalidatePath("/admin/users");
+}
+
+export async function createOperatorAction(formData: FormData) {
+  const companyName = String(formData.get("companyName") ?? "").trim();
+  const contactName = String(formData.get("contactName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!companyName || !contactName || !phone) {
+    return;
+  }
+
+  await createOperator({ companyName, contactName, phone });
+  revalidatePath("/admin/users");
+}
+
+export async function createStaffAction(formData: FormData) {
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const role = parseRole(formData.get("role"));
+
+  if (!fullName || !email) {
+    return;
+  }
+
+  await createStaff({ fullName, email, role });
+  revalidatePath("/admin/users");
+}
+
+export async function deletePassengerAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+
+  if (!id) {
+    return;
+  }
+
+  await deletePassenger(id);
+  revalidatePath("/admin/users");
+}
+
+export async function deleteOperatorAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+
+  if (!id) {
+    return;
+  }
+
+  await deleteOperator(id);
+  revalidatePath("/admin/users");
+}
+
+export async function deleteStaffAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+
+  if (!id) {
+    return;
+  }
+
+  await deleteStaff(id);
   revalidatePath("/admin/users");
 }
