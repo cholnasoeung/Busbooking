@@ -47,7 +47,11 @@ export default async function PassengersPage({
           Suspend users, delete stale accounts, or add a new rider manually.
         </p>
       </div>
-      <FilterPagination currentStatus={status} currentSearch={search} />
+      <FilterPagination
+        currentStatus={status}
+        currentSearch={search}
+        currentPage={page}
+      />
       <PassengerSection records={data.passengers} />
     </main>
   );

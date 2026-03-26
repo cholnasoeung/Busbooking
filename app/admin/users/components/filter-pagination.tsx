@@ -1,24 +1,23 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 type FilterPaginationProps = {
   currentStatus: string;
   currentSearch?: string;
+  currentPage: number;
 };
 
 export function FilterPagination({
   currentStatus,
   currentSearch = "",
+  currentPage,
 }: FilterPaginationProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const currentPage = Number(searchParams.get("page") ?? "1");
   const pageParam = (page: number) => `${page}`;
 
   function setParam(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     if (value === "") {
       params.delete(key);
     } else {
@@ -48,22 +47,14 @@ export function FilterPagination({
       <div className="flex items-center gap-2">
         <button
           disabled={currentPage <= 1}
-          onClick={() => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("page", pageParam(currentPage - 1));
-            window.location.href = `${pathname}?${params}`;
-          }}
+          onClick={() => setParam("page", pageParam(currentPage - 1))}
           className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
         >
           Previous
         </button>
         <span>Page {currentPage}</span>
         <button
-          onClick={() => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("page", pageParam(currentPage + 1));
-            window.location.href = `${pathname}?${params}`;
-          }}
+          onClick={() => setParam("page", pageParam(currentPage + 1))}
           className="rounded-full border border-stone-200 px-3 py-1"
         >
           Next

@@ -33,6 +33,9 @@ export type OperatorRecord = {
   verification: VerificationStatus;
   submittedAt: string;
   documentsComplete: boolean;
+  documentStatus: "complete" | "pending" | "issues";
+  complianceStatus: "pending" | "compliant" | "needs_followup";
+  complianceNotes: string;
 };
 
 export type StaffRecord = {
@@ -129,6 +132,9 @@ const operatorSeedData: OperatorDocument[] = [
     verification: "verified",
     submittedAt: "2026-03-02T00:00:00.000Z",
     documentsComplete: true,
+    documentStatus: "complete",
+    complianceStatus: "compliant",
+    complianceNotes: "Docs verified on 2026-03-22",
     createdAt: new Date("2026-03-02T04:00:00.000Z"),
     updatedAt: new Date("2026-03-22T09:00:00.000Z"),
   },
@@ -142,6 +148,9 @@ const operatorSeedData: OperatorDocument[] = [
     verification: "verified",
     submittedAt: "2026-02-25T00:00:00.000Z",
     documentsComplete: true,
+    documentStatus: "complete",
+    complianceStatus: "compliant",
+    complianceNotes: "Annual compliance check passed.",
     createdAt: new Date("2026-02-25T04:00:00.000Z"),
     updatedAt: new Date("2026-03-18T07:30:00.000Z"),
   },
@@ -155,6 +164,9 @@ const operatorSeedData: OperatorDocument[] = [
     verification: "pending",
     submittedAt: "2026-03-24T00:00:00.000Z",
     documentsComplete: false,
+    documentStatus: "pending",
+    complianceStatus: "needs_followup",
+    complianceNotes: "Waiting for tax certificate.",
     createdAt: new Date("2026-03-24T04:00:00.000Z"),
     updatedAt: new Date("2026-03-24T04:00:00.000Z"),
   },
@@ -168,6 +180,9 @@ const operatorSeedData: OperatorDocument[] = [
     verification: "rejected",
     submittedAt: "2026-03-12T00:00:00.000Z",
     documentsComplete: true,
+    documentStatus: "issues",
+    complianceStatus: "needs_followup",
+    complianceNotes: "Documentation rejected for expired registration.",
     createdAt: new Date("2026-03-12T04:00:00.000Z"),
     updatedAt: new Date("2026-03-14T06:00:00.000Z"),
   },
@@ -393,6 +408,19 @@ function toOperatorRecord(record: Partial<OperatorDocument> & { id: string }) {
     verification: normalizeVerification(record.verification),
     submittedAt: formatDateOnly(record.submittedAt ?? record.createdAt),
     documentsComplete: Boolean(record.documentsComplete),
+    documentStatus:
+      record.documentStatus === "complete" ||
+      record.documentStatus === "pending" ||
+      record.documentStatus === "issues"
+        ? record.documentStatus
+        : "pending",
+    complianceStatus:
+      record.complianceStatus === "pending" ||
+      record.complianceStatus === "compliant" ||
+      record.complianceStatus === "needs_followup"
+        ? record.complianceStatus
+        : "pending",
+    complianceNotes: record.complianceNotes ?? "No notes yet.",
   } satisfies OperatorRecord;
 }
 
@@ -597,6 +625,9 @@ export async function createOperator(data: {
     verification: "pending",
     submittedAt: new Date().toISOString(),
     documentsComplete: false,
+    documentStatus: "pending",
+    complianceStatus: "pending",
+    complianceNotes: "Awaiting review.",
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -714,6 +745,42 @@ export async function restoreOperator(id: string) {
       $set: {
         status,
         verification,
+        updatedAt: new Date(),
+      },
+    }
+  );
+}
+
+export async function setOperatorDocumentStatus(
+  id: string,
+  status: "complete" | "pending" | "issues",
+  note?: string
+) {
+  const db = await getDb();
+  await db.collection<OperatorDocument>(operatorsCollectionName).updateOne(
+    { id },
+    {
+      $set: {
+        documentStatus: status,
+        complianceNotes: note ?? "Document status updated.",
+        updatedAt: new Date(),
+      },
+    }
+  );
+}
+
+export async function recordOperatorCompliance(
+  id: string,
+  status: "pending" | "compliant" | "needs_followup",
+  note: string
+) {
+  const db = await getDb();
+  await db.collection<OperatorDocument>(operatorsCollectionName).updateOne(
+    { id },
+    {
+      $set: {
+        complianceStatus: status,
+        complianceNotes: note,
         updatedAt: new Date(),
       },
     }

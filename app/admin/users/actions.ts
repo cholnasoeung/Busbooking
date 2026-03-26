@@ -15,6 +15,8 @@ import {
   setStaffStatus,
   suspendOperator,
   verifyOperator,
+  setOperatorDocumentStatus,
+  recordOperatorCompliance,
   type AccountStatus,
   type StaffRole,
 } from "@/lib/admin-user-management";
@@ -97,6 +99,44 @@ export async function restoreOperatorAction(formData: FormData) {
 
   await restoreOperator(id);
   revalidatePath("/admin/users");
+}
+
+export async function updateOperatorDocumentStatusAction(
+  formData: FormData
+) {
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("documentStatus"));
+  const note = String(formData.get("note") ?? "");
+
+  if (!id || (status !== "complete" && status !== "pending" && status !== "issues")) {
+    return;
+  }
+
+  await setOperatorDocumentStatus(id, status as "complete" | "pending" | "issues", note);
+  revalidatePath("/admin/operators/approval");
+}
+
+export async function recordOperatorComplianceAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("complianceStatus"));
+  const note = String(formData.get("note") ?? "");
+
+  if (
+    !id ||
+    !note ||
+    (status !== "pending" &&
+      status !== "compliant" &&
+      status !== "needs_followup")
+  ) {
+    return;
+  }
+
+  await recordOperatorCompliance(
+    id,
+    status as "pending" | "compliant" | "needs_followup",
+    note
+  );
+  revalidatePath("/admin/operators/approval");
 }
 
 function parseRole(value: FormDataEntryValue | null): StaffRole {

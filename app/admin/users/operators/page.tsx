@@ -49,7 +49,11 @@ export default async function OperatorsPage({
           Approve new bus companies, suspend operators, or delete old partners.
         </p>
       </div>
-      <FilterPagination currentStatus={status} currentSearch={search} />
+      <FilterPagination
+        currentStatus={status}
+        currentSearch={search}
+        currentPage={page}
+      />
       <OperatorSection records={data.operators} />
     </main>
   );

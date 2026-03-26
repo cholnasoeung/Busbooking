@@ -47,7 +47,11 @@ export default async function StaffPage({
           Manage internal roles, suspend misuse, and create new admins quickly.
         </p>
       </div>
-      <FilterPagination currentStatus={status} currentSearch={search} />
+      <FilterPagination
+        currentStatus={status}
+        currentSearch={search}
+        currentPage={page}
+      />
       <StaffSection records={data.staff} />
     </main>
   );

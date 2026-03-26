@@ -34,7 +34,7 @@ export default async function AdminUsersPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
+      <section className="grid gap-6 md:grid-cols-4">
         <Link
           href="/admin/users/passengers"
           className="rounded-[28px] border border-stone-200 bg-stone-950 p-6 text-sm font-semibold text-white transition hover:border-amber-300"
@@ -69,6 +69,18 @@ export default async function AdminUsersPage() {
           <p className="mt-2 text-xl">Staff workspace</p>
           <p className="mt-3 text-xs text-stone-500">
             Grant or revoke internal access and create new admins.
+          </p>
+        </Link>
+        <Link
+          href="/admin/operators/approval"
+          className="rounded-[28px] border border-stone-200 bg-white p-6 text-sm font-semibold text-stone-950 transition hover:border-amber-300"
+        >
+          <p className="text-xs uppercase tracking-[0.35em] text-amber-500">
+            Operator approval
+          </p>
+          <p className="mt-2 text-xl">Approval workspace</p>
+          <p className="mt-3 text-xs text-stone-500">
+            Review documents and compliance notes before approving.
           </p>
         </Link>
       </section>

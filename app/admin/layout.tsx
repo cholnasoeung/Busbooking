@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const navItems = [
   { href: "/admin/users", label: "User Management", enabled: true },
-  { href: "#", label: "Operator Approval", enabled: false },
+  { href: "/admin/operators/approval", label: "Operator Approval", enabled: true },
   { href: "#", label: "Route & City", enabled: false },
   { href: "#", label: "Commission & Finance", enabled: false },
   { href: "#", label: "Content", enabled: false },
