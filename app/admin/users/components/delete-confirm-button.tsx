@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef } from "react";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 type DeleteConfirmButtonProps = {
   id: string;
@@ -19,41 +21,21 @@ export function DeleteConfirmButton({
 
   async function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
-    const modal = document.createElement("div");
-    modal.innerHTML = `
-      <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40">
-        <div class="max-w-sm rounded-3xl bg-white p-6 text-center text-stone-900 shadow-xl">
-          <p class="text-base font-semibold">Are you sure?</p>
-          <p class="mt-2 text-sm text-stone-500">${description}</p>
-          <div class="mt-6 flex justify-center gap-3 text-xs">
-            <button data-action="cancel" class="rounded-full border border-stone-200 px-4 py-2 transition hover:border-stone-400">
-              Cancel
-            </button>
-            <button data-action="confirm" class="rounded-full bg-rose-500 px-4 py-2 font-semibold text-white transition hover:bg-rose-400">
-              Confirm
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    function cleanup() {
-      modal.remove();
-    }
-
-    const cancel = modal.querySelector<HTMLButtonElement>('button[data-action="cancel"]');
-    const confirm = modal.querySelector<HTMLButtonElement>('button[data-action="confirm"]');
-
-    cancel?.addEventListener("click", () => {
-      cleanup();
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: description,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: label,
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      reverseButtons: true,
+      focusCancel: true,
     });
 
-    confirm?.addEventListener("click", () => {
-      cleanup();
+    if (result.isConfirmed) {
       formRef.current?.submit();
-    });
+    }
   }
 
   return (

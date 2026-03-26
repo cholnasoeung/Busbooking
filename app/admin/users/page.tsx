@@ -5,7 +5,7 @@ import { getAdminUserManagementData } from "@/lib/admin-user-management";
 export default async function AdminUsersPage() {
   const data = await getAdminUserManagementData();
   return (
-    <main className="mx-auto space-y-8 w-full max-w-[90rem] px-2 lg:px-4">
+    <main className="space-y-8 w-full px-2 sm:px-4">
       <section className="rounded-[28px] border border-stone-200 bg-white p-8 shadow-[0_20px_70px_rgba(28,25,23,0.08)]">
         <p className="text-xs uppercase tracking-[0.35em] text-amber-300">
           Admin Console
@@ -81,6 +81,18 @@ export default async function AdminUsersPage() {
           <p className="mt-2 text-xl">Approval workspace</p>
           <p className="mt-3 text-xs text-stone-500">
             Review documents and compliance notes before approving.
+          </p>
+        </Link>
+        <Link
+          href="/admin/finance"
+          className="rounded-[28px] border border-stone-200 bg-white p-6 text-sm font-semibold text-stone-950 transition hover:border-amber-300"
+        >
+          <p className="text-xs uppercase tracking-[0.35em] text-amber-500">
+            Commission & Finance
+          </p>
+          <p className="mt-2 text-xl">Finance workspace</p>
+          <p className="mt-3 text-xs text-stone-500">
+            Set commission rules, payouts, and reports.
           </p>
         </Link>
       </section>

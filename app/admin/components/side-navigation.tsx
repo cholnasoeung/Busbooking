@@ -14,6 +14,7 @@ const navItems: NavItem[] = [
   { href: "/admin/users", label: "User Management", description: "Open", enabled: true },
   { href: "/admin/operators/approval", label: "Operator Approval", description: "Open", enabled: true },
   { href: "/admin/route-city", label: "Route & City", description: "Open", enabled: true },
+  { href: "/admin/finance", label: "Commission & Finance", description: "Open", enabled: true },
   { href: "#", label: "Commission & Finance", description: "Soon", enabled: false },
   { href: "#", label: "Content", description: "Soon", enabled: false },
   { href: "#", label: "Support & Disputes", description: "Soon", enabled: false },
