@@ -23,7 +23,26 @@ export default function AdminLayout({
           <SideNavigation />
         </aside>
 
-        <div className="flex-1">{children}</div>
+        <div className="flex-1">
+          <div className="mb-4 flex items-center justify-end gap-3 rounded-[28px] border border-stone-200 bg-white/40 p-4 shadow-[0_20px_50px_rgba(28,25,23,0.08)] backdrop-blur">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-center text-sm font-semibold uppercase text-stone-950 shadow-inner">
+                AR
+              </div>
+              <div className="text-sm text-stone-800">
+                <p className="font-semibold">Admin Rina</p>
+                <p className="text-[0.65rem] text-stone-500">Platform Owner</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="rounded-full border border-stone-200 px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-stone-700 transition hover:border-amber-300 hover:text-stone-900"
+            >
+              Log out
+            </button>
+          </div>
+          {children}
+        </div>
       </div>
     </div>
   );
