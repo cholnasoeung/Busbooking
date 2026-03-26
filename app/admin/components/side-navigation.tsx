@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 type NavItem = {
+  id: string;
   href: string;
   label: string;
   description: string;
@@ -11,14 +12,55 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: "/admin/users", label: "User Management", description: "Open", enabled: true },
-  { href: "/admin/operators/approval", label: "Operator Approval", description: "Open", enabled: true },
-  { href: "/admin/route-city", label: "Route & City", description: "Open", enabled: true },
-  { href: "/admin/finance", label: "Commission & Finance", description: "Open", enabled: true },
-  { href: "#", label: "Commission & Finance", description: "Soon", enabled: false },
-  { href: "#", label: "Content", description: "Soon", enabled: false },
-  { href: "#", label: "Support & Disputes", description: "Soon", enabled: false },
-  { href: "#", label: "Analytics", description: "Soon", enabled: false },
+  {
+    id: "user-management",
+    href: "/admin/users",
+    label: "User Management",
+    description: "Open",
+    enabled: true,
+  },
+  {
+    id: "operator-approval",
+    href: "/admin/operators/approval",
+    label: "Operator Approval",
+    description: "Open",
+    enabled: true,
+  },
+  {
+    id: "route-city",
+    href: "/admin/route-city",
+    label: "Route & City",
+    description: "Open",
+    enabled: true,
+  },
+  {
+    id: "commission-finance",
+    href: "/admin/finance",
+    label: "Commission & Finance",
+    description: "Open",
+    enabled: true,
+  },
+  {
+    id: "content-management",
+    href: "/admin/content",
+    label: "Content Management",
+    description: "Open",
+    enabled: true,
+  },
+  {
+    id: "support-disputes",
+    href: "/admin/support",
+    label: "Support & Disputes",
+    description: "Open",
+    enabled: true,
+  },
+  {
+    id: "analytics",
+    href: "/admin/analytics",
+    label: "Analytics",
+    description: "Open",
+    enabled: true,
+  },
 ];
 
 export function SideNavigation() {
@@ -27,11 +69,11 @@ export function SideNavigation() {
   return (
     <nav className="mt-8 space-y-2">
       {navItems.map((item) => {
-        const active = item.enabled && pathname?.startsWith(item.href);
+        const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
-        return item.enabled ? (
+        return (
           <Link
-            key={item.label}
+            key={item.id}
             href={item.href}
             className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition ${
               active
@@ -40,16 +82,8 @@ export function SideNavigation() {
             }`}
           >
             <span>{item.label}</span>
-            <span>{active ? "Open" : "Open"}</span>
-          </Link>
-        ) : (
-          <div
-            key={item.label}
-            className="flex items-center justify-between rounded-2xl border border-white/10 px-4 py-3 text-sm text-stone-400"
-          >
-            <span>{item.label}</span>
             <span>{item.description}</span>
-          </div>
+          </Link>
         );
       })}
     </nav>
