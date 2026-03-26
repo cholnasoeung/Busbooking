@@ -3,9 +3,12 @@ import {
   type AccountStatus,
 } from "@/lib/admin-user-management";
 import { PassengerSection } from "@/app/admin/users/components/section-components";
+import { FilterPagination } from "@/app/admin/users/components/filter-pagination";
 
 type SearchParams = {
   status?: AccountStatus | "all";
+  search?: string;
+  page?: string;
 };
 
 function asStatusParam(value: string | undefined): AccountStatus | "all" {
@@ -26,7 +29,15 @@ export default async function PassengersPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const data = await getAdminUserManagementData(asStatusParam(searchParams.status));
+  const status = asStatusParam(searchParams.status);
+  const search = searchParams.search ?? "";
+  const page = Math.max(1, Number(searchParams.page ?? "1"));
+  const data = await getAdminUserManagementData({
+    status,
+    search,
+    page,
+    pageSize: 10,
+  });
 
   return (
     <main className="space-y-6">
@@ -36,6 +47,7 @@ export default async function PassengersPage({
           Suspend users, delete stale accounts, or add a new rider manually.
         </p>
       </div>
+      <FilterPagination currentStatus={status} currentSearch={search} />
       <PassengerSection records={data.passengers} />
     </main>
   );

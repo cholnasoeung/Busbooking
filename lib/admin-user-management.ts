@@ -408,8 +408,27 @@ function toStaffRecord(record: Partial<StaffDocument> & { id: string }) {
   } satisfies StaffRecord;
 }
 
+export type ManagementQuery = {
+  status?: AccountStatus | "all";
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ManagementResult = {
+  passengers: PassengerRecord[];
+  operators: OperatorRecord[];
+  staff: StaffRecord[];
+  stats: ManagementStat[];
+  pagination: {
+    totalPassengers: number;
+    totalOperators: number;
+    totalStaff: number;
+  };
+};
+
 export async function getAdminUserManagementData(
-  status: AccountStatus | "all"
+  query: ManagementQuery = {}
 ) {
   await ensureAdminUserSeedData();
 
@@ -421,12 +440,68 @@ export async function getAdminUserManagementData(
   );
   const staffCollection = db.collection<StaffDocument>(staffCollectionName);
 
-  const filter = status === "all" ? {} : { status };
+  const statusFilter =
+    query.status && query.status !== "all" ? { status: query.status } : {};
+
+  const page = Math.max(1, query.page ?? 1);
+  const pageSize = Math.max(1, query.pageSize ?? 10);
+  const skip = (page - 1) * pageSize;
+
+  const passengerFilter = {
+    ...statusFilter,
+    ...(query.search
+      ? {
+          $or: [
+            { fullName: { $regex: query.search, $options: "i" } },
+            { email: { $regex: query.search, $options: "i" } },
+          ],
+        }
+      : {}),
+  };
+
+  const operatorFilter = {
+    ...statusFilter,
+    ...(query.search
+      ? {
+          $or: [
+            { companyName: { $regex: query.search, $options: "i" } },
+            { contactName: { $regex: query.search, $options: "i" } },
+          ],
+        }
+      : {}),
+  };
+
+  const staffFilter = {
+    ...statusFilter,
+    ...(query.search
+      ? {
+          $or: [
+            { fullName: { $regex: query.search, $options: "i" } },
+            { email: { $regex: query.search, $options: "i" } },
+          ],
+        }
+      : {}),
+  };
 
   const [passengers, operators, staff, counts] = await Promise.all([
-    passengersCollection.find(filter).sort({ updatedAt: -1 }).toArray(),
-    operatorsCollection.find(filter).sort({ updatedAt: -1 }).toArray(),
-    staffCollection.find(filter).sort({ updatedAt: -1 }).toArray(),
+    passengersCollection
+      .find(passengerFilter)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .toArray(),
+    operatorsCollection
+      .find(operatorFilter)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .toArray(),
+    staffCollection
+      .find(staffFilter)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .toArray(),
     Promise.all([
       passengersCollection.countDocuments(),
       passengersCollection.countDocuments({ status: "pending_review" }),

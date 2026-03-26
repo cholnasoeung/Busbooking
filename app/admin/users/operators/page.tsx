@@ -2,10 +2,15 @@ import {
   getAdminUserManagementData,
   type AccountStatus,
 } from "@/lib/admin-user-management";
-import { OperatorSection } from "@/app/admin/users/components/section-components";
+import {
+  OperatorSection,
+} from "@/app/admin/users/components/section-components";
+import { FilterPagination } from "@/app/admin/users/components/filter-pagination";
 
 type SearchParams = {
   status?: AccountStatus | "all";
+  search?: string;
+  page?: string;
 };
 
 function asStatusParam(value: string | undefined): AccountStatus | "all" {
@@ -26,7 +31,15 @@ export default async function OperatorsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const data = await getAdminUserManagementData(asStatusParam(searchParams.status));
+  const status = asStatusParam(searchParams.status);
+  const search = searchParams.search ?? "";
+  const page = Math.max(1, Number(searchParams.page ?? "1"));
+  const data = await getAdminUserManagementData({
+    status,
+    search,
+    page,
+    pageSize: 10,
+  });
 
   return (
     <main className="space-y-6">
@@ -36,6 +49,7 @@ export default async function OperatorsPage({
           Approve new bus companies, suspend operators, or delete old partners.
         </p>
       </div>
+      <FilterPagination currentStatus={status} currentSearch={search} />
       <OperatorSection records={data.operators} />
     </main>
   );
