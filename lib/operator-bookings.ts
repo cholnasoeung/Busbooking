@@ -17,6 +17,9 @@ export type PassengerRecord = {
   cancellationReason?: string;
   farePaid?: number;
   agent?: string;
+  boardingPoint?: string;
+  droppingPoint?: string;
+  notes?: string;
 };
 
 export type BookingRecord = {
@@ -33,6 +36,29 @@ export type BookingRecord = {
   passengers: PassengerRecord[];
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type BookingPassengerInput = {
+  fullName: string;
+  email: string;
+  phone: string;
+  seat: string;
+  boardingPoint?: string;
+  droppingPoint?: string;
+};
+
+export type BookingCreationPayload = {
+  operatorId: string;
+  busId: string;
+  routeId: string;
+  routeName: string;
+  origin: string;
+  destination: string;
+  tripDate: Date;
+  departureTime: string;
+  arrivalTime: string;
+  fare: number;
+  passenger: BookingPassengerInput;
 };
 
 const DB_NAME = process.env.MONGODB_DB_NAME ?? "bus_booking";
@@ -131,6 +157,10 @@ const bookingSeed: BookingRecord[] = [
   },
 ];
 
+function generateId(prefix: string) {
+  return `${prefix}-${Date.now().toString().slice(-4)}`;
+}
+
 async function getDb() {
   const client = await clientPromise;
   return client.db(DB_NAME);
@@ -155,6 +185,42 @@ export async function listBookings(operatorId: string) {
     .find({ operatorId })
     .sort({ tripDate: 1, departureTime: 1 })
     .toArray();
+}
+
+export async function createBooking(data: BookingCreationPayload) {
+  const db = await getDb();
+  const booking: BookingRecord = {
+    id: generateId("BOOK"),
+    operatorId: data.operatorId,
+    busId: data.busId,
+    routeName: data.routeName,
+    origin: data.origin,
+    destination: data.destination,
+    tripDate: data.tripDate,
+    departureTime: data.departureTime,
+    arrivalTime: data.arrivalTime,
+    status: "scheduled",
+    passengers: [
+      {
+        id: generateId("PASS"),
+        fullName: data.passenger.fullName,
+        email: data.passenger.email,
+        phone: data.passenger.phone,
+        seat: data.passenger.seat,
+        status: "booked",
+        farePaid: data.fare,
+        agent: "redBus UI",
+        boardingPoint: data.passenger.boardingPoint,
+        droppingPoint: data.passenger.droppingPoint,
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  await db.collection<BookingRecord>(COLLECTION_NAME).insertOne(booking);
+
+  return { bookingId: booking.id };
 }
 
 function findPassengerIndex(passengers: PassengerRecord[], passengerId: string) {

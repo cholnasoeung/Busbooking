@@ -15,6 +15,11 @@ import {
   parseSearchDate,
   sameDay,
 } from "@/lib/display-utils";
+import { SeatSelection } from "@/components/seat-selection";
+import {
+  listSearchFilters,
+  type SearchFilterDefinition,
+} from "@/lib/search-filter-management";
 
 const typeLabelLookup = Object.fromEntries(
   busTypeCatalog.map((type) => [type.id, type.label])
@@ -50,26 +55,48 @@ function buildScheduleTripDate(schedule: TripSchedule, targetDate: Date) {
   return tripDate;
 }
 
+function pickSearchParam(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[value.length - 1] ?? null;
+  }
+  return value ?? null;
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
   searchParams?: SearchPageParams;
 }) {
-  const [routes, buses, trips, schedules] = await Promise.all([
+  const [routes, buses, trips, schedules, filters] = await Promise.all([
     listOperatorRoutes("OP-201"),
     listOperatorBuses("OP-201"),
     listTrips("OP-201"),
     listTripSchedules(),
+    listSearchFilters(),
   ]);
 
   const defaultRoute = routes[0];
+  const fromCities = Array.from(new Set(routes.map((route) => route.fromCity))).sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const requestedFrom = pickSearchParam(searchParams?.from)?.trim() || undefined;
+  const requestedTo = pickSearchParam(searchParams?.to)?.trim() || undefined;
+
   const selectedFrom =
-    searchParams?.from ?? defaultRoute?.fromCity ?? "Phnom Penh";
-  const availableTo = routes
-    .filter((route) => route.fromCity === selectedFrom)
-    .map((route) => route.toCity);
+    requestedFrom ?? defaultRoute?.fromCity ?? fromCities[0] ?? "Phnom Penh";
+  const availableToRaw = Array.from(
+    new Set(
+      routes
+        .filter((route) => route.fromCity === selectedFrom)
+        .map((route) => route.toCity)
+    )
+  );
+  const availableTo =
+    requestedTo && !availableToRaw.includes(requestedTo)
+      ? [requestedTo, ...availableToRaw]
+      : availableToRaw;
   const selectedTo =
-    searchParams?.to ??
+    requestedTo ??
     availableTo[0] ??
     defaultRoute?.toCity ??
     "Siem Reap";
@@ -130,37 +157,78 @@ export default async function SearchPage({
   type FilterOption = {
     id: string;
     label: string;
+    description?: string;
     predicate: (trip: TripRecord, bus?: typeof buses[number]) => boolean;
   };
-  const filterOptions: FilterOption[] = [
+
+  const fallbackFilterDefinitions: SearchFilterDefinition[] = [
     {
-      id: "evening",
+      id: "fallback-evening",
       label: "18:00-24:00",
-      predicate: (trip) => {
-        const hour = trip.tripDate.getUTCHours();
-        return hour >= 18 && hour < 24;
-      },
+      description: "Evening departures",
+      type: "time-window",
+      payload: { startHour: 18, endHour: 24 },
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
     {
-      id: "luxury",
+      id: "fallback-luxury",
       label: "Luxury coaches",
-      predicate: (trip, bus) => {
-        const type = bus?.type ?? "";
-        return type === "deluxe" || type === "vip";
-      },
+      description: "Deluxe and VIP fleet",
+      type: "bus-type",
+      payload: { busTypes: ["deluxe", "vip"] },
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
     {
-      id: "reschedulable",
+      id: "fallback-reschedulable",
       label: "Reschedulable",
-      predicate: (trip) => trip.status === "scheduled" || trip.status === "boarding",
+      description: "Trips that are still flexible",
+      type: "status",
+      payload: { statuses: ["scheduled", "boarding"] },
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
     {
-      id: "cancellable",
+      id: "fallback-cancellable",
       label: "Cancellable",
-      predicate: (trip) =>
-        trip.status !== "arrived" && trip.status !== "cancelled" && trip.status !== "departed",
+      description: "Trips that can still be canceled",
+      type: "status",
+      payload: { statuses: ["scheduled", "boarding", "departed"] },
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
   ];
+
+  const buildFilterPredicate = (definition: SearchFilterDefinition): FilterOption["predicate"] => {
+    const payload = definition.payload;
+    if ("startHour" in payload && "endHour" in payload) {
+      return (trip) => {
+        const hour = trip.tripDate.getUTCHours();
+        return hour >= payload.startHour && hour < payload.endHour;
+      };
+    }
+    if ("busTypes" in payload) {
+      return (trip, bus) => {
+        const type = bus?.type ?? "";
+        return payload.busTypes.includes(type);
+      };
+    }
+    if ("statuses" in payload) {
+      return (trip) => payload.statuses.includes(trip.status);
+    }
+    return () => true;
+  };
+
+  const filterDefinitions =
+    filters.length > 0 ? filters : fallbackFilterDefinitions;
+
+  const filterOptions: FilterOption[] = filterDefinitions.map((definition) => ({
+    id: definition.id,
+    label: definition.label,
+    description: definition.description,
+    predicate: buildFilterPredicate(definition),
+  }));
 
   const filterCounts = Object.fromEntries(
     filterOptions.map((option) => [
@@ -222,7 +290,7 @@ export default async function SearchPage({
               defaultValue={selectedFrom}
               className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-900 transition focus:border-[#ed3d34]"
             >
-              {Array.from(new Set(routes.map((route) => route.fromCity))).map((city) => (
+            {fromCities.map((city) => (
                 <option key={`from-${city}`} value={city}>
                   {city}
                 </option>
@@ -283,6 +351,7 @@ export default async function SearchPage({
                       ? "border-[#ed3d34] bg-[#ed3d34]/10 text-[#ed3d34]"
                       : "border-stone-200 text-stone-700 hover:border-[#ed3d34]"
                   }`}
+                  title={filter.description ?? filter.label}
                 >
                   <span>{filter.label}</span>
                   <span className="text-xs text-stone-400">{count}</span>
@@ -431,9 +500,13 @@ export default async function SearchPage({
                         </div>
                       </div>
                       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                        <button className="rounded-full bg-[#ed3d34] px-5 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-white transition hover:bg-[#c12b30]">
-                          View seats
-                        </button>
+                        <SeatSelection
+                          trip={trip}
+                          bus={bus}
+                          price={price}
+                          origin={selectedFrom}
+                          destination={selectedTo}
+                        />
                         <p className="text-[0.65rem] uppercase tracking-[0.4em] text-stone-400">
                           {trip.delayNotes.length > 0 ? "Delays expected" : "On time"}
                         </p>

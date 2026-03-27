@@ -10,6 +10,12 @@ import {
   deleteTripSchedule,
   deleteRoute,
 } from "@/lib/operator-route-management";
+import {
+  createSearchFilter,
+  deleteSearchFilter,
+  type SearchFilterPayload,
+  type SearchFilterType,
+} from "@/lib/search-filter-management";
 
 export async function createRouteAction(formData: FormData) {
   const routeName = String(formData.get("routeName") ?? "").trim();
@@ -98,5 +104,69 @@ export async function deleteRouteAction(formData: FormData) {
   const routeId = String(formData.get("routeId") ?? "");
   if (!routeId) return;
   await deleteRoute(routeId);
+  revalidatePath("/operator/routes");
+}
+
+export async function createSearchFilterAction(formData: FormData) {
+  const label = String(formData.get("label") ?? "").trim();
+  const type = (String(formData.get("type") ?? "time-window") as SearchFilterType) ?? "time-window";
+  const description = String(formData.get("description") ?? "").trim();
+  const payloadValue = String(formData.get("payload") ?? "").trim();
+
+  if (!label || !payloadValue) {
+    return;
+  }
+
+  let payload: SearchFilterPayload | undefined;
+
+  if (type === "time-window") {
+    const [startRaw, endRaw] = payloadValue.split("-").map((value) => Number(value.trim()));
+    if (!Number.isFinite(startRaw) || !Number.isFinite(endRaw)) {
+      return;
+    }
+    const startHour = Math.max(0, Math.min(23, Math.floor(startRaw)));
+    const endHour = Math.max(0, Math.min(24, Math.ceil(endRaw)));
+    if (endHour <= startHour) {
+      return;
+    }
+    payload = { startHour, endHour };
+  } else if (type === "bus-type") {
+    const busTypes = payloadValue
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (busTypes.length === 0) {
+      return;
+    }
+    payload = { busTypes };
+  } else if (type === "status") {
+    const statuses = payloadValue
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (statuses.length === 0) {
+      return;
+    }
+    payload = { statuses };
+  }
+
+  if (!payload) {
+    return;
+  }
+
+  await createSearchFilter({
+    label,
+    type,
+    payload,
+    description: description || undefined,
+  });
+
+  revalidatePath("/operator/routes");
+}
+
+export async function deleteSearchFilterAction(formData: FormData) {
+  const filterId = String(formData.get("filterId") ?? "");
+  if (!filterId) return;
+  await deleteSearchFilter(filterId);
   revalidatePath("/operator/routes");
 }

@@ -2,6 +2,7 @@ import type {
   OperatorRoute,
   TripSchedule,
 } from "@/lib/operator-route-management";
+import type { SearchFilterDefinition } from "@/lib/search-filter-management";
 
 import { CreateRouteCard } from "./create-route-card";
 import { RouteOverview } from "./route-overview";
@@ -9,10 +10,12 @@ import { RoutesLibrary } from "./routes-library";
 import { ScheduleBuilderCard } from "./schedule-builder-card";
 import { ScheduleLibrary } from "./schedule-library";
 import { StopManagementCard } from "./stop-management-card";
+import { FilterManagementCard } from "./filter-management-card";
 
 type RouteManagementWorkspaceProps = {
   routes: OperatorRoute[];
   schedules: TripSchedule[];
+  filters: SearchFilterDefinition[];
   cityOptions: string[];
 };
 
@@ -35,6 +38,7 @@ export function RouteManagementWorkspace({
           <ScheduleBuilderCard routes={routes} />
           <RoutesLibrary routes={routes} />
           <ScheduleLibrary routes={routes} schedules={schedules} />
+          <FilterManagementCard filters={filters} />
         </div>
       </section>
     </main>
