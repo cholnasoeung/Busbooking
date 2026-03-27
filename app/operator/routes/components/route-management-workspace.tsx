@@ -22,6 +22,7 @@ type RouteManagementWorkspaceProps = {
 export function RouteManagementWorkspace({
   routes,
   schedules,
+  filters,
   cityOptions,
 }: RouteManagementWorkspaceProps) {
   return (
