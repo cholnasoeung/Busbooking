@@ -35,6 +35,12 @@ export default function OperatorLayout({
             <Link className="rounded-2xl border border-white/10 px-4 py-2 transition hover:border-amber-300" href="/operator/bookings">
               Booking operations
             </Link>
+            <Link className="rounded-2xl border border-white/10 px-4 py-2 transition hover:border-amber-300" href="/operator/trips">
+              Trip operations
+            </Link>
+            <Link className="rounded-2xl border border-white/10 px-4 py-2 transition hover:border-amber-300" href="/operator/reports">
+              Reports
+            </Link>
           </nav>
         </aside>
         <main className="flex-1">{children}</main>

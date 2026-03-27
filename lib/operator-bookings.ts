@@ -15,6 +15,8 @@ export type PassengerRecord = {
   boardedAt?: Date;
   rescheduledTo?: Date;
   cancellationReason?: string;
+  farePaid?: number;
+  agent?: string;
 };
 
 export type BookingRecord = {
@@ -56,6 +58,8 @@ const bookingSeed: BookingRecord[] = [
         phone: "+855 12 900 111",
         seat: "A3",
         status: "booked",
+        farePaid: 12.5,
+        agent: "Agent River",
       },
       {
         id: "PASS-3002",
@@ -73,6 +77,7 @@ const bookingSeed: BookingRecord[] = [
         seat: "A5",
         status: "checked_in",
         checkInTime: new Date(),
+        farePaid: 12.5,
       },
     ],
     createdAt: new Date("2026-03-18T05:00:00.000Z"),
@@ -98,6 +103,8 @@ const bookingSeed: BookingRecord[] = [
         seat: "B1",
         status: "checked_in",
         checkInTime: new Date(),
+        farePaid: 15,
+        agent: "Agent River",
       },
       {
         id: "PASS-3005",
@@ -106,6 +113,7 @@ const bookingSeed: BookingRecord[] = [
         phone: "+855 96 333 555",
         seat: "B2",
         status: "booked",
+        farePaid: 11,
       },
       {
         id: "PASS-3006",
@@ -114,6 +122,8 @@ const bookingSeed: BookingRecord[] = [
         phone: "+855 12 888 666",
         seat: "B3",
         status: "booked",
+        farePaid: 11,
+        agent: "Agent Coastal",
       },
     ],
     createdAt: new Date("2026-03-19T05:00:00.000Z"),
