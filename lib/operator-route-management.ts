@@ -54,6 +54,32 @@ const routeSeed: OperatorRoute[] = [
     createdAt: new Date("2026-03-01T08:00:00.000Z"),
     updatedAt: new Date("2026-03-10T09:00:00.000Z"),
   },
+  {
+    id: "ROUTE-302",
+    routeName: "Phnom Penh ↔ Siem Reap",
+    operatorId: "OP-201",
+    fromCity: "Phnom Penh",
+    toCity: "Siem Reap",
+    stops: ["Olympic Circle", "Central Market", "Siem Reap Bus Terminal"],
+    boardingPoints: ["Olympic Circle", "Aeon Mall"],
+    dropPoints: ["Siem Reap Central"],
+    active: true,
+    createdAt: new Date("2026-03-05T08:00:00.000Z"),
+    updatedAt: new Date("2026-03-12T09:00:00.000Z"),
+  },
+  {
+    id: "ROUTE-303",
+    routeName: "Phnom Penh ↔ Kampot",
+    operatorId: "OP-201",
+    fromCity: "Phnom Penh",
+    toCity: "Kampot",
+    stops: ["Olympic Circle", "National Stadium", "Kampot Central"],
+    boardingPoints: ["Olympic Circle", "Central Market"],
+    dropPoints: ["Kampot Terminal"],
+    active: true,
+    createdAt: new Date("2026-03-08T08:00:00.000Z"),
+    updatedAt: new Date("2026-03-13T09:00:00.000Z"),
+  },
 ];
 
 const scheduleSeed: TripSchedule[] = [
@@ -205,4 +231,3 @@ export async function createSchedule(data: {
     updatedAt: new Date(),
   });
 }
-

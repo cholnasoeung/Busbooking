@@ -17,6 +17,7 @@ export type TripRecord = {
   id: string;
   operatorId: string;
   busId: string;
+  routeId: string;
   routeName: string;
   tripDate: Date;
   status: TripStatus;
@@ -38,6 +39,7 @@ const seedTrips: TripRecord[] = [
     id: "TRIP-1001",
     operatorId: "OP-201",
     busId: "BUS-101",
+    routeId: "ROUTE-302",
     routeName: "Phnom Penh → Siem Reap",
     tripDate: new Date("2026-04-05T07:00:00.000Z"),
     status: "scheduled",
@@ -60,6 +62,7 @@ const seedTrips: TripRecord[] = [
     id: "TRIP-1002",
     operatorId: "OP-201",
     busId: "BUS-102",
+    routeId: "ROUTE-303",
     routeName: "Phnom Penh → Kampot",
     tripDate: new Date("2026-04-06T09:30:00.000Z"),
     status: "boarding",
