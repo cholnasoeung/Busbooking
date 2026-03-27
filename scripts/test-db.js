@@ -21,7 +21,7 @@ async function testConnection() {
       username = match[1];
       console.log('📝 Username from URI:', username);
     }
-  } catch (e) {
+  } catch {
     // Ignore parsing errors
   }
 
@@ -34,7 +34,7 @@ async function testConnection() {
     if (match) {
       console.log('Cluster:', match[1]);
     }
-  } catch (e) {
+  } catch {
     // Ignore parsing errors
   }
 

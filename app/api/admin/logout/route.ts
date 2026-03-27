@@ -7,6 +7,6 @@ export async function POST() {
     { success: true, redirect: "/admin/login" },
     { status: 200 }
   );
-  response.cookies.delete(SESSION_COOKIE_NAME, { path: "/" });
+  response.cookies.delete({ name: SESSION_COOKIE_NAME, path: "/" });
   return response;
 }

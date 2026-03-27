@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import Link from "next/link";
 import { busTypeCatalog, listOperatorBuses } from "@/lib/operator-bus-management";
 import { listOperatorRoutes } from "@/lib/operator-route-management";
@@ -17,6 +20,7 @@ type SearchPageParams = {
   from?: string;
   to?: string;
   date?: string;
+  filter?: string | string[];
 };
 
 export default async function SearchPage({
@@ -54,8 +58,64 @@ export default async function SearchPage({
   const availableTrips = trips.filter(
     (trip) => matchingRouteIds.has(trip.routeId) && sameDay(trip.tripDate, selectedDate)
   );
-
   const busLookup = Object.fromEntries(buses.map((bus) => [bus.id, bus]));
+  type FilterOption = {
+    id: string;
+    label: string;
+    predicate: (trip: typeof trips[number], bus?: typeof buses[number]) => boolean;
+  };
+  const filterOptions: FilterOption[] = [
+    {
+      id: "evening",
+      label: "18:00-24:00",
+      predicate: (trip) => {
+        const hour = trip.tripDate.getUTCHours();
+        return hour >= 18 && hour < 24;
+      },
+    },
+    {
+      id: "luxury",
+      label: "Luxury coaches",
+      predicate: (trip, bus) => {
+        const type = bus?.type ?? "";
+        return type === "deluxe" || type === "vip";
+      },
+    },
+    {
+      id: "reschedulable",
+      label: "Reschedulable",
+      predicate: (trip) => trip.status === "scheduled" || trip.status === "boarding",
+    },
+    {
+      id: "cancellable",
+      label: "Cancellable",
+      predicate: (trip) =>
+        trip.status !== "arrived" && trip.status !== "cancelled" && trip.status !== "departed",
+    },
+  ];
+
+  const filterCounts = Object.fromEntries(
+    filterOptions.map((option) => [
+      option.id,
+      availableTrips.filter((trip) =>
+        option.predicate(trip, busLookup[trip.busId])
+      ).length,
+    ])
+  );
+
+  const rawFilter = searchParams?.filter;
+  const activeFilter =
+    Array.isArray(rawFilter)
+      ? rawFilter[rawFilter.length - 1]
+      : rawFilter;
+
+  const filteredTrips = activeFilter
+    ? availableTrips.filter((trip) =>
+        filterOptions
+          .find((option) => option.id === activeFilter)
+          ?.predicate(trip, busLookup[trip.busId]) ?? true
+      )
+    : availableTrips;
 
   return (
     <main className="min-h-screen bg-[#f5f5ff] px-6 py-12 text-stone-900 sm:px-10 lg:px-14">
@@ -67,7 +127,7 @@ export default async function SearchPage({
                 Search results
               </p>
               <h1 className="text-3xl font-semibold text-stone-900">
-                {availableTrips.length} bus{availableTrips.length === 1 ? "" : "es"} found
+                {filteredTrips.length} bus{filteredTrips.length === 1 ? "" : "es"} found
                 <span className="ml-3 text-sm text-stone-500">
                   on {selectedDateLabel}
                 </span>
@@ -83,7 +143,12 @@ export default async function SearchPage({
               Back to landing
             </Link>
           </div>
-          <form action="/search" method="get" className="flex flex-wrap gap-3">
+          <form
+            id="search-form"
+            action="/search"
+            method="get"
+            className="flex flex-wrap gap-3"
+          >
             <select
               name="from"
               defaultValue={selectedFrom}
@@ -116,6 +181,7 @@ export default async function SearchPage({
               defaultValue={selectedDateValue}
               className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 transition focus:border-[#ed3d34]"
             />
+            <input type="hidden" name="filter" value={activeFilter ?? ""} />
             <button
               type="submit"
               className="rounded-2xl bg-[#ed3d34] px-6 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-white transition hover:bg-[#c12b30]"
@@ -130,21 +196,31 @@ export default async function SearchPage({
             <h2 className="text-xs uppercase tracking-[0.35em] text-stone-500">
               Filter buses
             </h2>
-            {[
-              { label: "18:00-24:00", count: 54 },
-              { label: "Luxury coaches", count: 26 },
-              { label: "Reschedulable", count: 13 },
-              { label: "Cancellable", count: 21 },
-            ].map((filter) => (
-              <button
-                key={filter.label}
-                type="button"
-                className="flex w-full items-center justify-between rounded-2xl border border-stone-200 px-4 py-2 text-left text-sm font-semibold text-stone-700 transition hover:border-[#ed3d34]"
-              >
-                <span>{filter.label}</span>
-                <span className="text-xs text-stone-400">{filter.count}</span>
-              </button>
-            ))}
+            {filterOptions.map((filter) => {
+              const count = filterCounts[filter.id] ?? 0;
+              const isActive = activeFilter === filter.id;
+              const params = new URLSearchParams({
+                from: selectedFrom,
+                to: selectedTo,
+                date: selectedDateValue,
+                filter: filter.id,
+              });
+              const href = `/search?${params.toString()}`;
+              return (
+                <Link
+                  key={filter.id}
+                  href={href}
+                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-2 text-left text-sm font-semibold transition ${
+                    isActive
+                      ? "border-[#ed3d34] bg-[#ed3d34]/10 text-[#ed3d34]"
+                      : "border-stone-200 text-stone-700 hover:border-[#ed3d34]"
+                  }`}
+                >
+                  <span>{filter.label}</span>
+                  <span className="text-xs text-stone-400">{count}</span>
+                </Link>
+              );
+            })}
             <div className="space-y-2 pt-4">
               <p className="text-xs uppercase tracking-[0.35em] text-stone-400">
                 Departure window
@@ -171,13 +247,13 @@ export default async function SearchPage({
               </div>
             </div>
 
-            {availableTrips.length === 0 ? (
+            {filteredTrips.length === 0 ? (
               <div className="rounded-[30px] border border-dashed border-stone-200 bg-stone-50 p-8 text-center text-sm text-stone-500">
-                No trips match the selected corridor and date. Adjust the filters to see nearby departures.
+                No trips match the selected corridor, date, or filters. Adjust the filters to see nearby departures.
               </div>
             ) : (
               <div className="space-y-4">
-                {availableTrips.map((trip, index) => {
+                {filteredTrips.map((trip, index) => {
                   const bus = busLookup[trip.busId];
                   const seatDetails =
                     bus?.seatLayout

@@ -1,4 +1,4 @@
-import { OptionalUnlessRequiredId } from "mongodb";
+import { MongoBulkWriteError, OptionalUnlessRequiredId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
 export type OperatorRoute = {
@@ -94,6 +94,28 @@ const scheduleSeed: TripSchedule[] = [
     createdAt: new Date("2026-03-05T00:00:00.000Z"),
     updatedAt: new Date("2026-03-05T00:00:00.000Z"),
   },
+  {
+    id: "SCHED-402",
+    routeId: "ROUTE-302",
+    departureTime: "07:15",
+    vehicle: "VVIP 3",
+    recurrence: "daily",
+    days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+    startDate: new Date("2026-03-06T00:00:00.000Z"),
+    createdAt: new Date("2026-03-06T00:00:00.000Z"),
+    updatedAt: new Date("2026-03-06T00:00:00.000Z"),
+  },
+  {
+    id: "SCHED-403",
+    routeId: "ROUTE-303",
+    departureTime: "18:30",
+    vehicle: "Night Rider 5",
+    recurrence: "daily",
+    days: ["mon", "wed", "fri"],
+    startDate: new Date("2026-03-07T00:00:00.000Z"),
+    createdAt: new Date("2026-03-07T00:00:00.000Z"),
+    updatedAt: new Date("2026-03-07T00:00:00.000Z"),
+  },
 ];
 
 async function getDb() {
@@ -112,9 +134,16 @@ async function ensureSeeds() {
     entries.map(async (entry) => {
       const count = await db.collection(entry.name).countDocuments();
       if (count === 0) {
-        await db
-          .collection(entry.name)
-          .insertMany(entry.seed as OptionalUnlessRequiredId<OperatorRoute | TripSchedule>[]);
+        try {
+          await db
+            .collection(entry.name)
+            .insertMany(entry.seed as OptionalUnlessRequiredId<OperatorRoute | TripSchedule>[]);
+        } catch (error) {
+          if (error instanceof MongoBulkWriteError && error.code === 11000) {
+            return;
+          }
+          throw error;
+        }
       }
     })
   );
@@ -225,9 +254,23 @@ export async function createSchedule(data: {
     vehicle: data.vehicle,
     recurrence: data.recurrence,
     days: data.days,
-    startDate: data.startDate,
-    endDate: data.endDate,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+  startDate: data.startDate,
+  endDate: data.endDate,
+  createdAt: new Date(),
+  updatedAt: new Date(),
   });
+}
+
+export async function deleteRoute(routeId: string) {
+  const db = await getDb();
+  await Promise.all([
+    db.collection<OperatorRoute>("operator_routes").deleteOne({ id: routeId }),
+    db.collection<TripSchedule>("trip_schedules").deleteMany({ routeId }),
+    db.collection<BoardingPoint>("boarding_points").deleteMany({ routeId }),
+  ]);
+}
+
+export async function deleteTripSchedule(scheduleId: string) {
+  const db = await getDb();
+  await db.collection<TripSchedule>("trip_schedules").deleteOne({ id: scheduleId });
 }

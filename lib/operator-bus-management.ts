@@ -119,9 +119,9 @@ async function ensureSeeds() {
   }
 }
 
-function parseDate(value: string | undefined) {
+function parseDate(value: string | Date | null | undefined) {
   if (!value) return null;
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
     return null;
   }
@@ -164,12 +164,14 @@ type RawBusDocument = {
   busType?: BusType;
   seatLayout?: string | string[] | LegacySeatLayout | null;
   amenities?: string[];
-  registration?: Partial<BusRegistrationDetails>;
+  registration?: Partial<BusRegistrationDetails> & {
+    driver?: BusDriverDetails;
+  };
   registrationNumber?: string;
   registrationAuthority?: string;
-  inspectionDue?: string;
-  insuranceDue?: string;
-  registrationExpiry?: string;
+  inspectionDue?: string | Date | null;
+  insuranceDue?: string | Date | null;
+  registrationExpiry?: string | Date | null;
   driverName?: string;
   driverLicense?: string;
   crew?: string[];

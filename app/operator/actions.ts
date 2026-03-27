@@ -30,13 +30,15 @@ export async function operatorLoginAction(formData: FormData) {
 
   const profile = await operatorLogin(identifier, secret);
   if (profile) {
-    cookies().set("operator-auth", profile.id);
+    const cookieStore = await cookies();
+    cookieStore.set("operator-auth", profile.id);
     revalidatePath("/operator/dashboard");
   }
 }
 
 export async function logoutAction() {
-  cookies().delete("operator-auth");
+  const cookieStore = await cookies();
+  cookieStore.delete("operator-auth");
   revalidatePath("/operator/dashboard");
 }
 

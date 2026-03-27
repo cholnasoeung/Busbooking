@@ -7,6 +7,8 @@ import {
   addDropPoint,
   createRoute,
   createSchedule,
+  deleteTripSchedule,
+  deleteRoute,
 } from "@/lib/operator-route-management";
 
 export async function createRouteAction(formData: FormData) {
@@ -82,5 +84,19 @@ export async function createScheduleAction(formData: FormData) {
     startDate,
     endDate: endDate && !Number.isNaN(endDate.getTime()) ? endDate : undefined,
   });
+  revalidatePath("/operator/routes");
+}
+
+export async function deleteScheduleAction(formData: FormData) {
+  const scheduleId = String(formData.get("scheduleId") ?? "");
+  if (!scheduleId) return;
+  await deleteTripSchedule(scheduleId);
+  revalidatePath("/operator/routes");
+}
+
+export async function deleteRouteAction(formData: FormData) {
+  const routeId = String(formData.get("routeId") ?? "");
+  if (!routeId) return;
+  await deleteRoute(routeId);
   revalidatePath("/operator/routes");
 }
