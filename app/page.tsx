@@ -104,76 +104,90 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full border-y border-stone-200 bg-white px-6 py-10 sm:px-10 lg:px-14">
-        <div className="mx-auto grid w-full max-w-[1400px] gap-6 rounded-[30px] border border-stone-100 bg-[#fff4ef] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)] lg:grid-cols-[1.6fr_1fr]">
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.4em] text-stone-500">
-              Search the fleet
-            </p>
-            <h3 className="text-3xl font-semibold text-stone-900">
-              Pick your corridor, choose the date, and jump to live buses
-            </h3>
-            <p className="text-sm text-stone-500">
-              Route data is drawn straight from MongoDB. Submit the form to land
-              on a dedicated results page with all departures, filters, and
-              seats.
-            </p>
-          </div>
-          <form
-            action="/search"
-            method="get"
-            className="grid gap-3 rounded-[24px] border border-white/40 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
-          >
-            <div>
-              <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
-                From
-              </label>
-              <select
-                name="from"
-                defaultValue={defaultFrom}
-                className="mt-1 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-900"
-              >
-                {fromCities.map((city) => (
-                  <option key={`from-${city}`} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
+      <section className="w-full border-y border-stone-200 bg-white px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-[960px]">
+          <div className="rounded-[32px] border border-stone-100 bg-[#fff4ef] p-6 shadow-[0_25px_70px_rgba(15,23,42,0.08)]">
+            <div className="space-y-2 pb-6 text-center">
+              <p className="text-xs uppercase tracking-[0.4em] text-stone-500">
+                Search the fleet
+              </p>
+              <h3 className="text-3xl font-semibold text-stone-900">
+                Pick your corridor, choose the date, and jump to live buses
+              </h3>
+              <p className="text-sm text-stone-500">
+                Route data is drawn straight from MongoDB. Submit the form to land
+                on a dedicated results page with all departures, filters, and
+                seats.
+              </p>
             </div>
-            <div>
-              <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
-                To
-              </label>
-              <select
-                name="to"
-                defaultValue={defaultTo}
-                className="mt-1 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-900"
-              >
-                {toCities.map((city) => (
-                  <option key={`to-${city}`} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
-                Date of journey
-              </label>
-              <input
-                type="date"
-                name="date"
-                defaultValue={todayValue}
-                className="mt-1 w-full rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900"
-              />
-            </div>
-            <button
-              type="submit"
-              className="mt-1 w-full rounded-2xl bg-[#f0282f] px-6 py-3 text-xs font-semibold uppercase tracking-[0.5em] text-white transition hover:bg-[#d52227]"
+            <form
+              action="/search"
+              method="get"
+              className="space-y-4 rounded-[24px] border border-white/40 bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
             >
-              Search buses
-            </button>
-          </form>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
+                    From
+                  </label>
+                  <select
+                    name="from"
+                    defaultValue={defaultFrom}
+                    className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-900"
+                  >
+                    {fromCities.map((city) => (
+                      <option key={`from-${city}`} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
+                    To
+                  </label>
+                  <select
+                    name="to"
+                    defaultValue={defaultTo}
+                    className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-900"
+                  >
+                    {toCities.map((city) => (
+                      <option key={`to-${city}`} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
+                    Date of journey
+                  </label>
+                  <input
+                    type="date"
+                    name="date"
+                    defaultValue={todayValue}
+                    className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[0.6rem] uppercase tracking-[0.35em] text-stone-500">
+                    Return (optional)
+                  </label>
+                  <input
+                    type="date"
+                    name="return"
+                    className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="mt-1 block w-full rounded-[28px] bg-[#f0282f] px-6 py-4 text-base font-semibold uppercase tracking-[0.4em] text-white transition hover:bg-[#d52227]"
+              >
+                Search buses
+              </button>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -238,148 +252,42 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full border-t border-stone-200 bg-white px-6 pb-16 pt-12 sm:px-10 lg:px-14">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.45em] text-stone-500">
-                Operator fleet
-              </p>
-              <h2 className="text-3xl font-semibold text-stone-900">
-                Live fleet data from your database
-              </h2>
-              <p className="text-sm text-stone-500">
-                {buses.length
-                  ? `Showing ${buses.length} vehicle${buses.length === 1 ? "" : "s"}`
-                  : "No buses found yet. Seeds are inserted automatically when the collection is empty."}
-              </p>
-              {buses.length > 0 && (
-                <p className="text-[0.65rem] uppercase tracking-[0.4em] text-stone-400">
-                  {activeBuses} active · {buses.length} total
-                </p>
-              )}
-            </div>
-            <Link
-              href="/operator/buses"
-              className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500"
-            >
-              Manage buses
-            </Link>
+      
+      <footer className="w-full bg-[#0f0f11] text-white">
+        <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-6 py-12 sm:px-10 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-sm space-y-3">
+            <p className="text-xs uppercase tracking-[0.5em] text-white/70">redBus</p>
+            <h3 className="text-2xl font-semibold">Ride confidently across Cambodia</h3>
+            <p className="text-sm text-white/70">
+              Operator-grade tooling meets passenger simplicity. Publish routes, manage
+              schedules, and surface live buses in a single dashboard.
+            </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {buses.length === 0 ? (
-              <div className="rounded-[32px] border border-dashed border-stone-200 bg-[#fef6ef] p-10 text-center text-sm text-stone-500">
-                Waiting for seeded data... check database connection or seed
-                scripts.
-              </div>
-            ) : (
-              buses.map((bus) => {
-                const statusClasses =
-                  bus.status === "active"
-                    ? "bg-emerald-100 text-emerald-800"
-                    : bus.status === "maintenance"
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-stone-100 text-stone-600";
-                const seatDetails =
-                  bus.seatLayout
-                    .split("\n")
-                    .map((segment) => segment.trim())
-                    .filter(Boolean)
-                    .join(" • ") || "Custom layout";
-                const typeLabel = typeLabelLookup[bus.type] ?? bus.type;
-
-                return (
-                  <article
-                    key={bus.id}
-                    className="rounded-[32px] border border-stone-200 bg-white p-6 shadow-[0_25px_50px_rgba(15,23,42,0.08)]"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.45em] text-stone-400">
-                          {typeLabel}
-                        </p>
-                        <h3 className="text-2xl font-semibold text-stone-900">
-                          {bus.name}
-                        </h3>
-                        <p className="text-sm text-stone-500">{seatDetails}</p>
-                      </div>
-                      <span
-                        className={`rounded-full px-4 py-1 text-xs font-semibold ${statusClasses}`}
-                      >
-                        {bus.status}
-                      </span>
-                    </div>
-                    <div className="mt-5 grid gap-4 text-sm text-stone-500 sm:grid-cols-2">
-                      <div>
-                        <p className="text-[0.6rem] uppercase tracking-[0.4em] text-stone-400">
-                          Registration
-                        </p>
-                        <p className="text-base font-semibold text-stone-900">
-                          {bus.registration.registrationNumber}
-                        </p>
-                        <p className="text-xs text-stone-500">
-                          {bus.registration.authority}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[0.6rem] uppercase tracking-[0.4em] text-stone-400">
-                          Inspection due
-                        </p>
-                        <p className="text-base font-semibold text-stone-900">
-                          {formatDate(bus.registration.inspectionDue)}
-                        </p>
-                        <p className="text-[0.6rem] uppercase tracking-[0.4em] text-stone-400">
-                          Insurance due
-                        </p>
-                        <p className="text-base font-semibold text-stone-900">
-                          {formatDate(bus.registration.insuranceDue)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-stone-500">
-                      <div>
-                        <p className="text-[0.6rem] uppercase tracking-[0.4em] text-stone-400">
-                          Driver
-                        </p>
-                        <p className="font-semibold text-stone-900">
-                          {bus.driver?.name ?? "TBD"}
-                        </p>
-                        <p className="text-xs text-stone-500">
-                          {bus.driver?.license ?? "License pending"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[0.6rem] uppercase tracking-[0.4em] text-stone-400">
-                          Crew
-                        </p>
-                        <p className="font-semibold text-stone-900">
-                          {bus.crew.length ? bus.crew.join(", ") : "Assign crew"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-stone-500">
-                      {bus.amenities.length ? (
-                        bus.amenities.map((amenity) => (
-                          <span
-                            key={`${bus.id}-${amenity}`}
-                            className="rounded-full border border-stone-200 px-3 py-1 text-[0.6rem] text-stone-600"
-                          >
-                            {amenity}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-stone-400">
-                          No amenities listed yet
-                        </span>
-                      )}
-                    </div>
-                  </article>
-                );
-              })
-            )}
+          <div className="flex flex-col gap-6 sm:flex-row">
+            <div className="space-y-2 text-sm text-white/70">
+              <p className="text-xs uppercase tracking-[0.4em] text-white/60">Company</p>
+              <Link href="/operator/routes" className="block font-semibold text-white">
+                Route management
+              </Link>
+              <Link href="/operator/buses" className="block font-semibold text-white">
+                Fleet overview
+              </Link>
+              <Link href="/operator/pricing" className="block font-semibold text-white">
+                Pricing
+              </Link>
+            </div>
+            <div className="space-y-2 text-sm text-white/70">
+              <p className="text-xs uppercase tracking-[0.4em] text-white/60">Connect</p>
+              <p className="text-sm text-white">support@redbus.local</p>
+              <p className="text-sm text-white">+855 23 000 000</p>
+              <p className="text-sm text-white/70">#38 Monivong Blvd, Phnom Penh</p>
+            </div>
           </div>
         </div>
-      </section>
+        <div className="border-t border-white/10 px-6 py-6 text-center text-xs uppercase tracking-[0.3em] text-white/40">
+          © {new Date().getFullYear()} redBus Cambodia · Built on MongoDB · All rights reserved
+        </div>
+      </footer>
     </main>
   );
 }
