@@ -3,8 +3,12 @@ export const fetchCache = "force-no-store";
 
 import Link from "next/link";
 import { busTypeCatalog, listOperatorBuses } from "@/lib/operator-bus-management";
-import { listOperatorRoutes } from "@/lib/operator-route-management";
-import { listTrips } from "@/lib/operator-trips";
+import {
+  listOperatorRoutes,
+  listTripSchedules,
+  type TripSchedule,
+} from "@/lib/operator-route-management";
+import { listTrips, type TripRecord } from "@/lib/operator-trips";
 import {
   formatDate,
   formatTime,
@@ -23,15 +27,39 @@ type SearchPageParams = {
   filter?: string | string[];
 };
 
+const daysOfWeek = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+function normalizeDay(day: string) {
+  return day.trim().toLowerCase().slice(0, 3);
+}
+
+function scheduleRunsOnDate(schedule: TripSchedule, targetDate: Date) {
+  if (targetDate < schedule.startDate) return false;
+  if (schedule.endDate && targetDate > schedule.endDate) return false;
+  const day = normalizeDay(daysOfWeek[targetDate.getDay()]);
+  const listedDays = new Set((schedule.days ?? []).map(normalizeDay));
+  if (listedDays.size === 0) return schedule.recurrence === "daily";
+  return listedDays.has(day);
+}
+
+function buildScheduleTripDate(schedule: TripSchedule, targetDate: Date) {
+  const [hoursRaw, minutesRaw] = schedule.departureTime.split(":").map(Number);
+  if (Number.isNaN(hoursRaw) || Number.isNaN(minutesRaw)) return null;
+  const tripDate = new Date(targetDate);
+  tripDate.setHours(hoursRaw, minutesRaw, 0, 0);
+  return tripDate;
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
   searchParams?: SearchPageParams;
 }) {
-  const [routes, buses, trips] = await Promise.all([
+  const [routes, buses, trips, schedules] = await Promise.all([
     listOperatorRoutes("OP-201"),
     listOperatorBuses("OP-201"),
     listTrips("OP-201"),
+    listTripSchedules(),
   ]);
 
   const defaultRoute = routes[0];
@@ -55,14 +83,54 @@ export default async function SearchPage({
       .map((route) => route.id)
   );
 
-  const availableTrips = trips.filter(
+  const actualTrips = trips.filter(
     (trip) => matchingRouteIds.has(trip.routeId) && sameDay(trip.tripDate, selectedDate)
   );
+  const routeLookup = Object.fromEntries(routes.map((route) => [route.id, route]));
+  const scheduleTrips = schedules
+    .filter((schedule) => matchingRouteIds.has(schedule.routeId))
+    .filter((schedule) => {
+      const tripDate = buildScheduleTripDate(schedule, selectedDate);
+      return tripDate ? scheduleRunsOnDate(schedule, selectedDate) : false;
+    })
+    .filter((schedule) => {
+      const tripDate = buildScheduleTripDate(schedule, selectedDate);
+      return tripDate
+        ? !actualTrips.some(
+            (trip) =>
+              trip.routeId === schedule.routeId &&
+              Math.abs(trip.tripDate.getTime() - tripDate.getTime()) < 60 * 1000
+          )
+        : false;
+    })
+    .map((schedule) => {
+      const tripDate = buildScheduleTripDate(schedule, selectedDate)!;
+      const route = routeLookup[schedule.routeId];
+      const matchedBus = buses.find((bus) => bus.name === schedule.vehicle);
+      return {
+        id: `${schedule.id}-${selectedDateValue}`,
+        operatorId: "OP-201",
+        busId: matchedBus?.id ?? "",
+        routeId: schedule.routeId,
+        routeName: route?.routeName ?? "Custom departure",
+        tripDate,
+        status: "scheduled" as const,
+        driver: {
+          name: matchedBus?.driver?.name ?? "Dispatch",
+          phone: "",
+          vehicle: schedule.vehicle,
+        },
+        delayNotes: [],
+        livePositions: [],
+        updatedAt: new Date(),
+      };
+    });
+  const availableTrips = [...actualTrips, ...scheduleTrips];
   const busLookup = Object.fromEntries(buses.map((bus) => [bus.id, bus]));
   type FilterOption = {
     id: string;
     label: string;
-    predicate: (trip: typeof trips[number], bus?: typeof buses[number]) => boolean;
+    predicate: (trip: TripRecord, bus?: typeof buses[number]) => boolean;
   };
   const filterOptions: FilterOption[] = [
     {

@@ -99,14 +99,20 @@ async function ensureSeed(operatorId: string) {
   }
 }
 
-export async function listTrips(operatorId: string) {
+export async function listTrips(operatorId: string): Promise<TripRecord[]> {
   await ensureSeed(operatorId);
   const db = await getDb();
-  return db
+  const records = await db
     .collection<TripRecord>(COLLECTION)
     .find({ operatorId })
     .sort({ tripDate: 1 })
     .toArray();
+
+  return records.map((record) => {
+    const { _id, ...rest } = record;
+    void _id;
+    return rest;
+  });
 }
 
 async function updateTrip(
