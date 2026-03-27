@@ -29,6 +29,12 @@ export default function OperatorLayout({
             <Link className="rounded-2xl border border-white/10 px-4 py-2 transition hover:border-amber-300" href="/operator/pricing">
               Pricing management
             </Link>
+            <Link className="rounded-2xl border border-white/10 px-4 py-2 transition hover:border-amber-300" href="/operator/inventory">
+              Inventory & seats
+            </Link>
+            <Link className="rounded-2xl border border-white/10 px-4 py-2 transition hover:border-amber-300" href="/operator/bookings">
+              Booking operations
+            </Link>
           </nav>
         </aside>
         <main className="flex-1">{children}</main>
