@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { BusRecord } from "@/lib/operator-bus-management";
 import type { TripRecord } from "@/lib/operator-trips";
@@ -40,6 +40,7 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
   const [bookingStatus, setBookingStatus] = useState<
     { type: "success" | "error"; message: string } | null
   >(null);
+  const [blockedSeats, setBlockedSeats] = useState<string[]>([]);
   const rows = useMemo(() => parseLayout(bus?.seatLayout), [bus?.seatLayout]);
   const tripTime = formatTime(trip.tripDate);
   const boardingPoints = ["Central Market", "Olympic Circle", "Highway 4 Plaza"];
@@ -55,6 +56,47 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
     "Board / drop points",
     "Passenger information",
   ];
+
+  useEffect(() => {
+    if (!isOpen) {
+      setBlockedSeats([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const busId = bus?.id ?? trip.busId;
+    const params = new URLSearchParams({
+      operatorId: trip.operatorId,
+      busId,
+      routeId: trip.routeId,
+      tripDate: trip.tripDate.toISOString(),
+    });
+
+    fetch(`/api/passenger/booked-seats?${params.toString()}`, {
+      signal: controller.signal,
+    })
+      .then((response) => response.json())
+      .then((payload) => {
+        if (payload?.seats && Array.isArray(payload.seats)) {
+          setBlockedSeats(
+            Array.from(
+              new Set(
+                payload.seats
+                  .map((seat: string) => seat?.trim()?.toUpperCase())
+                  .filter(Boolean)
+              )
+            )
+          );
+        } else {
+          setBlockedSeats([]);
+        }
+      })
+      .catch(() => {
+        setBlockedSeats([]);
+      });
+
+    return () => controller.abort();
+  }, [bus?.id, isOpen, trip.busId, trip.operatorId, trip.routeId, trip.tripDate]);
 
   const submitBooking = async () => {
     if (!selectedSeat || !passengerSession) {
@@ -110,6 +152,10 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
           payload?.message ??
           "Booking saved. You can track it from your profile after signing in.",
       });
+      const seatNormalized = selectedSeat?.trim().toUpperCase();
+      if (seatNormalized) {
+        setBlockedSeats((prev) => Array.from(new Set([...prev, seatNormalized])));
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Booking failed.";
       setBookingStatus({ type: "error", message });
@@ -194,14 +240,22 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
                         {rows.map((row, rowIndex) => (
                           <div key={`row-${rowIndex}`} className="flex gap-3 justify-center">
                             {row.map((seat) => {
-                              const isSelected = selectedSeat === seat;
+                              const normalizedSeat = seat.trim().toUpperCase();
+                              const isSelected = selectedSeat === normalizedSeat;
+                              const isBlocked = blockedSeats.includes(normalizedSeat);
                               return (
                                 <button
                                   key={seat}
                                   type="button"
-                                  onClick={() => setSelectedSeat(seat)}
-                                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition ${
-                                    isSelected
+                                  disabled={isBlocked}
+                                  onClick={() => {
+                                    if (isBlocked) return;
+                                    setSelectedSeat(normalizedSeat);
+                                  }}
+                                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-semibold transition ${
+                                    isBlocked
+                                      ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400"
+                                      : isSelected
                                       ? "border-green-500 bg-gradient-to-tr from-green-100 to-white text-green-700"
                                       : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
                                   }`}

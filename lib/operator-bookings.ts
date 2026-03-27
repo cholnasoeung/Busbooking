@@ -1,6 +1,7 @@
 import { OptionalUnlessRequiredId } from "mongodb";
 
 import clientPromise from "@/lib/mongodb";
+import { blockSeats } from "@/lib/operator-inventory";
 
 export type PassengerStatus = "booked" | "checked_in" | "boarded" | "cancelled" | "rescheduled";
 
@@ -26,6 +27,7 @@ export type BookingRecord = {
   id: string;
   operatorId: string;
   busId: string;
+  routeId?: string;
   routeName: string;
   origin: string;
   destination: string;
@@ -69,6 +71,7 @@ const bookingSeed: BookingRecord[] = [
     id: "BOOK-5001",
     operatorId: "OP-201",
     busId: "BUS-101",
+    routeId: "ROUTE-302",
     routeName: "Phnom Penh ↔ Siem Reap",
     origin: "Phnom Penh",
     destination: "Siem Reap",
@@ -113,6 +116,7 @@ const bookingSeed: BookingRecord[] = [
     id: "BOOK-5002",
     operatorId: "OP-201",
     busId: "BUS-102",
+    routeId: "ROUTE-303",
     routeName: "Phnom Penh ↔ Kampot",
     origin: "Phnom Penh",
     destination: "Kampot",
@@ -161,6 +165,15 @@ function generateId(prefix: string) {
   return `${prefix}-${Date.now().toString().slice(-4)}`;
 }
 
+function normalizeSeat(value?: string) {
+  if (!value) return "";
+  return value.trim().toUpperCase();
+}
+
+function isMatchingTripDate(candidate: Date, target: Date) {
+  return Math.abs(candidate.getTime() - target.getTime()) < 1000 * 60;
+}
+
 async function getDb() {
   const client = await clientPromise;
   return client.db(DB_NAME);
@@ -193,6 +206,7 @@ export async function createBooking(data: BookingCreationPayload) {
     id: generateId("BOOK"),
     operatorId: data.operatorId,
     busId: data.busId,
+    routeId: data.routeId,
     routeName: data.routeName,
     origin: data.origin,
     destination: data.destination,
@@ -220,7 +234,39 @@ export async function createBooking(data: BookingCreationPayload) {
 
   await db.collection<BookingRecord>(COLLECTION_NAME).insertOne(booking);
 
+  try {
+    const seatToBlock = normalizeSeat(data.passenger.seat);
+    if (seatToBlock) {
+      await blockSeats(data.operatorId, data.busId, [seatToBlock]);
+    }
+  } catch {
+    // best effort; booking already stored
+  }
+
   return { bookingId: booking.id };
+}
+
+export async function listBookedSeats(params: {
+  operatorId: string;
+  busId: string;
+  routeId: string;
+  tripDate: Date;
+}) {
+  const db = await getDb();
+  const records = await db
+    .collection<BookingRecord>(COLLECTION_NAME)
+    .find({
+      operatorId: params.operatorId,
+      busId: params.busId,
+      routeId: params.routeId,
+    })
+    .toArray();
+
+  const normalizedSeats = records
+    .filter((record) => isMatchingTripDate(record.tripDate, params.tripDate))
+    .flatMap((record) => record.passengers.map((passenger) => normalizeSeat(passenger.seat)));
+
+  return Array.from(new Set(normalizedSeats.filter(Boolean)));
 }
 
 function findPassengerIndex(passengers: PassengerRecord[], passengerId: string) {
