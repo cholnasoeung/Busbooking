@@ -142,7 +142,7 @@ function describeLayoutObject(layout: LegacySeatLayout) {
   return chunks.join(" ") || "Custom layout";
 }
 
-function normalizeSeatLayout(value?: string | string[] | LegacySeatLayout | null) {
+export function normalizeSeatLayout(value?: string | string[] | LegacySeatLayout | null) {
   if (!value) return "";
   if (typeof value === "string") return value;
   if (Array.isArray(value)) return value.join("\n");

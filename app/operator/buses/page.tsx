@@ -3,6 +3,7 @@ import {
   Amenity,
   busTypeCatalog,
   listOperatorBuses,
+  normalizeSeatLayout,
 } from "@/lib/operator-bus-management";
 import { listOperatorStaff } from "@/lib/operator-portal";
 import {
@@ -98,6 +99,10 @@ export default async function OperatorBusesPage() {
               placeholder="Seat layout (comma separated seats, newline for each row)"
               className="rounded-2xl border border-white/20 bg-stone-950 px-3 py-2 text-white"
             />
+            <p className="text-[0.65rem] text-stone-500">
+              Example: <span className="font-mono text-[0.65rem] text-stone-300">A1,A2,A3</span> on one line and{" "}
+              <span className="font-mono text-[0.65rem] text-stone-300">B1,B2,B3</span> on the next.
+            </p>
             <input
               name="amenities"
               placeholder="Amenities (comma separated, e.g. Wi-Fi, USB charging)"
@@ -141,7 +146,7 @@ export default async function OperatorBusesPage() {
         ) : (
           buses.map((bus) => {
             // Normalized seat layout is always a string
-            const layoutValue = bus.seatLayout ?? "";
+            const layoutValue = normalizeSeatLayout(bus.seatLayout);
             // Parse seat layout to calculate seat count
             const seatRows = layoutValue
               .split(/\r?\n/)
@@ -235,7 +240,8 @@ export default async function OperatorBusesPage() {
                       className="mt-2 w-full rounded-2xl border border-white/20 bg-stone-950 px-3 py-2 text-white"
                     />
                     <p className="mt-1 text-[0.65rem] text-stone-500">
-                      Use newline to split rows and commas to separate seats.
+                      Use newline to split rows and commas to separate seats (e.g., A1,A2,A3 on one
+                      row and B1,B2,B3 on the next).
                     </p>
                     <button
                       type="submit"

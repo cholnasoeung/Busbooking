@@ -1,4 +1,5 @@
 import { SideNavigation } from "./components/side-navigation";
+import { LogoutButton } from "./components/logout-button";
 
 export default function AdminLayout({
   children,
@@ -34,12 +35,7 @@ export default function AdminLayout({
                 <p className="text-[0.65rem] text-stone-500">Platform Owner</p>
               </div>
             </div>
-            <button
-              type="button"
-              className="rounded-full border border-stone-200 px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-stone-700 transition hover:border-amber-300 hover:text-stone-900"
-            >
-              Log out
-            </button>
+            <LogoutButton />
           </div>
           {children}
         </div>
