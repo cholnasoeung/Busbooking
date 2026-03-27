@@ -25,17 +25,28 @@ const typeLabelLookup = Object.fromEntries(
   busTypeCatalog.map((type) => [type.id, type.label])
 ) as Record<string, string>;
 
-type SearchPageParams = {
-  from?: string;
-  to?: string;
-  date?: string;
-  filter?: string | string[];
-};
+type SearchPageParams = Record<string, string | string[] | undefined>;
+
+type SearchPageSearchParams = SearchPageParams | URLSearchParams;
 
 const daysOfWeek = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 function normalizeDay(day: string) {
   return day.trim().toLowerCase().slice(0, 3);
+}
+
+function findMatchingCity(value: string, options: string[]) {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  const exactMatch = options.find((option) => option.trim().toLowerCase() === normalized);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  return options.find((option) => option.trim().toLowerCase().startsWith(normalized)) ?? null;
 }
 
 function scheduleRunsOnDate(schedule: TripSchedule, targetDate: Date) {
@@ -55,11 +66,20 @@ function buildScheduleTripDate(schedule: TripSchedule, targetDate: Date) {
   return tripDate;
 }
 
-function pickSearchParam(value?: string | string[]) {
-  if (Array.isArray(value)) {
-    return value[value.length - 1] ?? null;
+function pickSearchParamValue(
+  target: SearchPageSearchParams | undefined,
+  key: string
+): string | null {
+  if (!target) return null;
+  if (typeof (target as URLSearchParams).get === "function") {
+    const value = (target as URLSearchParams).get(key);
+    return value ?? null;
   }
-  return value ?? null;
+  const raw = (target as SearchPageParams)[key];
+  if (Array.isArray(raw)) {
+    return raw[raw.length - 1] ?? null;
+  }
+  return raw ?? null;
 }
 
 export default async function SearchPage({
@@ -79,11 +99,21 @@ export default async function SearchPage({
   const fromCities = Array.from(new Set(routes.map((route) => route.fromCity))).sort((a, b) =>
     a.localeCompare(b)
   );
-  const requestedFrom = pickSearchParam(searchParams?.from)?.trim() || undefined;
-  const requestedTo = pickSearchParam(searchParams?.to)?.trim() || undefined;
+  const requestedFromRaw = pickSearchParamValue(searchParams, "from");
+  const requestedToRaw = pickSearchParamValue(searchParams, "to");
+
+  const requestedFrom =
+    requestedFromRaw && requestedFromRaw.trim().length > 0
+      ? requestedFromRaw
+      : undefined;
+  const requestedTo =
+    requestedToRaw && requestedToRaw.trim().length > 0 ? requestedToRaw : undefined;
 
   const selectedFrom =
-    requestedFrom ?? defaultRoute?.fromCity ?? fromCities[0] ?? "Phnom Penh";
+    (requestedFrom && findMatchingCity(requestedFrom, fromCities)) ??
+    defaultRoute?.fromCity ??
+    fromCities[0] ??
+    "Phnom Penh";
   const availableToRaw = Array.from(
     new Set(
       routes
@@ -91,16 +121,26 @@ export default async function SearchPage({
         .map((route) => route.toCity)
     )
   );
+  const canonicalRequestedTo =
+    requestedTo && findMatchingCity(requestedTo, availableToRaw);
+  const fallbackRequestedTo = requestedTo?.trim();
+  const candidateRequestedTo = canonicalRequestedTo ?? fallbackRequestedTo;
+
   const availableTo =
-    requestedTo && !availableToRaw.includes(requestedTo)
-      ? [requestedTo, ...availableToRaw]
+    candidateRequestedTo &&
+    !availableToRaw.includes(candidateRequestedTo)
+      ? [candidateRequestedTo, ...availableToRaw]
       : availableToRaw;
+
   const selectedTo =
-    requestedTo ??
+    canonicalRequestedTo ??
+    (candidateRequestedTo && availableTo.includes(candidateRequestedTo)
+      ? candidateRequestedTo
+      : undefined) ??
     availableTo[0] ??
     defaultRoute?.toCity ??
     "Siem Reap";
-  const selectedDate = parseSearchDate(searchParams?.date) ?? new Date();
+  const selectedDate = parseSearchDate(pickSearchParamValue(searchParams, "date") ?? undefined) ?? new Date();
   const selectedDateLabel = formatDate(selectedDate);
   const selectedDateValue = selectedDate.toISOString().split("T")[0];
 
@@ -239,7 +279,10 @@ export default async function SearchPage({
     ])
   );
 
-  const rawFilter = searchParams?.filter;
+  let rawFilter = pickSearchParamValue(searchParams, "filter");
+  if (typeof rawFilter === "string" && rawFilter.trim().length === 0) {
+    rawFilter = null;
+  }
   const activeFilter =
     Array.isArray(rawFilter)
       ? rawFilter[rawFilter.length - 1]
@@ -287,6 +330,7 @@ export default async function SearchPage({
           >
             <select
               name="from"
+              key={`from-${selectedFrom}`}
               defaultValue={selectedFrom}
               className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-900 transition focus:border-[#ed3d34]"
             >
@@ -298,6 +342,7 @@ export default async function SearchPage({
             </select>
             <select
               name="to"
+              key={`to-${selectedTo}`}
               defaultValue={selectedTo}
               className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-900 transition focus:border-[#ed3d34]"
             >
@@ -314,6 +359,7 @@ export default async function SearchPage({
             <input
               type="date"
               name="date"
+              key={`date-${selectedDateValue}`}
               defaultValue={selectedDateValue}
               className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 transition focus:border-[#ed3d34]"
             />

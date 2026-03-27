@@ -65,12 +65,17 @@ async function getDb() {
 
 async function ensureSeed() {
   const db = await getDb();
-  const count = await db.collection("search_filters").countDocuments();
-  if (count === 0) {
-    await db
-      .collection<SearchFilterDefinition>("search_filters")
-      .insertMany(filterSeed);
-  }
+  await Promise.all(
+    filterSeed.map((seed) =>
+      db.collection<SearchFilterDefinition>("search_filters").updateOne(
+        { id: seed.id },
+        {
+          $setOnInsert: seed,
+        },
+        { upsert: true }
+      )
+    )
+  );
 }
 
 function buildId(prefix: string) {

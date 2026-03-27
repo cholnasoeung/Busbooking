@@ -1,4 +1,3 @@
-import { MongoBulkWriteError, OptionalUnlessRequiredId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
 export type OperatorRoute = {
@@ -125,28 +124,23 @@ async function getDb() {
 
 async function ensureSeeds() {
   const db = await getDb();
-  const entries = [
-    { name: "operator_routes", seed: routeSeed },
-    { name: "trip_schedules", seed: scheduleSeed },
-  ];
 
-  await Promise.all(
-    entries.map(async (entry) => {
-      const count = await db.collection(entry.name).countDocuments();
-      if (count === 0) {
-        try {
-          await db
-            .collection(entry.name)
-            .insertMany(entry.seed as OptionalUnlessRequiredId<OperatorRoute | TripSchedule>[]);
-        } catch (error) {
-          if (error instanceof MongoBulkWriteError && error.code === 11000) {
-            return;
-          }
-          throw error;
-        }
-      }
-    })
-  );
+  await Promise.all([
+    ...routeSeed.map((seed) =>
+      db.collection<OperatorRoute>("operator_routes").updateOne(
+        { id: seed.id },
+        { $setOnInsert: seed as OperatorRoute },
+        { upsert: true }
+      )
+    ),
+    ...scheduleSeed.map((seed) =>
+      db.collection<TripSchedule>("trip_schedules").updateOne(
+        { id: seed.id },
+        { $setOnInsert: seed as TripSchedule },
+        { upsert: true }
+      )
+    ),
+  ]);
 }
 
 function buildId(prefix: string) {
