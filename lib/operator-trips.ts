@@ -89,30 +89,40 @@ async function getDb() {
 }
 
 async function ensureSeed(operatorId: string) {
-  const db = await getDb();
-  const collection = db.collection<TripRecord>(COLLECTION);
-  const count = await collection.countDocuments({ operatorId });
-  if (count === 0) {
-    await collection.insertMany(
-      seedTrips.filter((trip) => trip.operatorId === operatorId) as OptionalUnlessRequiredId<TripRecord>[]
-    );
+  try {
+    const db = await getDb();
+    const collection = db.collection<TripRecord>(COLLECTION);
+    const count = await collection.countDocuments({ operatorId });
+    if (count === 0) {
+      await collection.insertMany(
+        seedTrips.filter((trip) => trip.operatorId === operatorId) as OptionalUnlessRequiredId<TripRecord>[]
+      );
+    }
+  } catch (error) {
+    console.error("Failed to seed trips database:", error);
+    // Continue without seeding - the functions will return fallback data
   }
 }
 
 export async function listTrips(operatorId: string): Promise<TripRecord[]> {
-  await ensureSeed(operatorId);
-  const db = await getDb();
-  const records = await db
-    .collection<TripRecord>(COLLECTION)
-    .find({ operatorId })
-    .sort({ tripDate: 1 })
-    .toArray();
+  try {
+    await ensureSeed(operatorId);
+    const db = await getDb();
+    const records = await db
+      .collection<TripRecord>(COLLECTION)
+      .find({ operatorId })
+      .sort({ tripDate: 1 })
+      .toArray();
 
-  return records.map((record) => {
-    const { _id, ...rest } = record;
-    void _id;
-    return rest;
-  });
+    return records.map((record) => {
+      const { _id, ...rest } = record;
+      void _id;
+      return rest;
+    });
+  } catch (error) {
+    console.error("Failed to list trips, returning empty array:", error);
+    return [];
+  }
 }
 
 async function updateTrip(

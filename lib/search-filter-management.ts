@@ -64,18 +64,23 @@ async function getDb() {
 }
 
 async function ensureSeed() {
-  const db = await getDb();
-  await Promise.all(
-    filterSeed.map((seed) =>
-      db.collection<SearchFilterDefinition>("search_filters").updateOne(
-        { id: seed.id },
-        {
-          $setOnInsert: seed,
-        },
-        { upsert: true }
+  try {
+    const db = await getDb();
+    await Promise.all(
+      filterSeed.map((seed) =>
+        db.collection<SearchFilterDefinition>("search_filters").updateOne(
+          { id: seed.id },
+          {
+            $setOnInsert: seed,
+          },
+          { upsert: true }
+        )
       )
-    )
-  );
+    );
+  } catch (error) {
+    console.error("Failed to seed filters database:", error);
+    // Continue without seeding - the functions will return fallback data
+  }
 }
 
 function buildId(prefix: string) {
@@ -84,12 +89,18 @@ function buildId(prefix: string) {
 
 export async function listSearchFilters() {
   await ensureSeed();
-  const db = await getDb();
-  return db
-    .collection<SearchFilterDefinition>("search_filters")
-    .find()
-    .sort({ label: 1 })
-    .toArray();
+  try {
+    const db = await getDb();
+    return await db
+      .collection<SearchFilterDefinition>("search_filters")
+      .find()
+      .sort({ label: 1 })
+      .toArray();
+  } catch (error) {
+    console.error("Failed to list search filters, returning fallback data:", error);
+    // Return fallback data when MongoDB is not available
+    return filterSeed;
+  }
 }
 
 export async function createSearchFilter(data: {

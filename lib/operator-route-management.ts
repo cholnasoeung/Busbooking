@@ -130,33 +130,38 @@ type FirstUseMarker = {
 };
 
 async function ensureSeeds() {
-  const db = await getDb();
-  const marker = await db.collection<FirstUseMarker>("seed_state").findOne({ key: SEED_STATE_KEY });
-  if (marker) {
-    return;
+  try {
+    const db = await getDb();
+    const marker = await db.collection<FirstUseMarker>("seed_state").findOne({ key: SEED_STATE_KEY });
+    if (marker) {
+      return;
+    }
+
+    await Promise.all([
+      ...routeSeed.map((seed) =>
+        db.collection<OperatorRoute>("operator_routes").updateOne(
+          { id: seed.id },
+          { $setOnInsert: seed as OperatorRoute },
+          { upsert: true }
+        )
+      ),
+      ...scheduleSeed.map((seed) =>
+        db.collection<TripSchedule>("trip_schedules").updateOne(
+          { id: seed.id },
+          { $setOnInsert: seed as TripSchedule },
+          { upsert: true }
+        )
+      ),
+    ]);
+
+    await db.collection<FirstUseMarker>("seed_state").insertOne({
+      key: SEED_STATE_KEY,
+      seededAt: new Date(),
+    });
+  } catch (error) {
+    console.error("Failed to seed database:", error);
+    // Continue without seeding - the functions will return fallback data
   }
-
-  await Promise.all([
-    ...routeSeed.map((seed) =>
-      db.collection<OperatorRoute>("operator_routes").updateOne(
-        { id: seed.id },
-        { $setOnInsert: seed as OperatorRoute },
-        { upsert: true }
-      )
-    ),
-    ...scheduleSeed.map((seed) =>
-      db.collection<TripSchedule>("trip_schedules").updateOne(
-        { id: seed.id },
-        { $setOnInsert: seed as TripSchedule },
-        { upsert: true }
-      )
-    ),
-  ]);
-
-  await db.collection<FirstUseMarker>("seed_state").insertOne({
-    key: SEED_STATE_KEY,
-    seededAt: new Date(),
-  });
 }
 
 function buildId(prefix: string) {
@@ -165,8 +170,14 @@ function buildId(prefix: string) {
 
 export async function listOperatorRoutes(operatorId: string) {
   await ensureSeeds();
-  const db = await getDb();
-  return db.collection<OperatorRoute>("operator_routes").find({ operatorId }).sort({ updatedAt: -1 }).toArray();
+  try {
+    const db = await getDb();
+    return await db.collection<OperatorRoute>("operator_routes").find({ operatorId }).sort({ updatedAt: -1 }).toArray();
+  } catch (error) {
+    console.error("Failed to list operator routes, returning fallback data:", error);
+    // Return fallback data when MongoDB is not available
+    return routeSeed.filter(route => route.operatorId === operatorId);
+  }
 }
 
 export async function createRoute(data: {
@@ -242,9 +253,19 @@ export async function addDropPoint(routeId: string, name: string, location: stri
 
 export async function listTripSchedules(routeId?: string) {
   await ensureSeeds();
-  const db = await getDb();
-  const query = routeId ? { routeId } : {};
-  return db.collection<TripSchedule>("trip_schedules").find(query).sort({ departureTime: 1 }).toArray();
+  try {
+    const db = await getDb();
+    const query = routeId ? { routeId } : {};
+    return await db.collection<TripSchedule>("trip_schedules").find(query).sort({ departureTime: 1 }).toArray();
+  } catch (error) {
+    console.error("Failed to list trip schedules, returning fallback data:", error);
+    // Return fallback data when MongoDB is not available
+    let schedules = scheduleSeed;
+    if (routeId) {
+      schedules = schedules.filter(s => s.routeId === routeId);
+    }
+    return schedules;
+  }
 }
 
 export async function createSchedule(data: {

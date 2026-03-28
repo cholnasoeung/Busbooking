@@ -110,12 +110,17 @@ async function getDb() {
 }
 
 async function ensureSeeds() {
-  const db = await getDb();
-  const count = await db.collection("operator_buses").countDocuments();
-  if (count === 0) {
-    await db
-      .collection<BusRecord>("operator_buses")
-      .insertMany(busSeed as OptionalUnlessRequiredId<BusRecord>[]);
+  try {
+    const db = await getDb();
+    const count = await db.collection("operator_buses").countDocuments();
+    if (count === 0) {
+      await db
+        .collection<BusRecord>("operator_buses")
+        .insertMany(busSeed as OptionalUnlessRequiredId<BusRecord>[]);
+    }
+  } catch (error) {
+    console.error("Failed to seed buses database:", error);
+    // Continue without seeding - the functions will return fallback data
   }
 }
 
@@ -237,15 +242,21 @@ function mapDocumentToBus(doc: RawBusDocument): BusRecord {
 }
 
 export async function listOperatorBuses(operatorId: string): Promise<BusRecord[]> {
-  await ensureSeeds();
-  const db = await getDb();
-  const records = await db
-    .collection<RawBusDocument>("operator_buses")
-    .find({ operatorId })
-    .sort({ updatedAt: -1 })
-    .toArray();
+  try {
+    await ensureSeeds();
+    const db = await getDb();
+    const records = await db
+      .collection<RawBusDocument>("operator_buses")
+      .find({ operatorId })
+      .sort({ updatedAt: -1 })
+      .toArray();
 
-  return records.map(mapDocumentToBus);
+    return records.map(mapDocumentToBus);
+  } catch (error) {
+    console.error("Failed to list operator buses, returning fallback data:", error);
+    // Return fallback data when MongoDB is not available
+    return busSeed.filter(bus => bus.operatorId === operatorId);
+  }
 }
 
 export async function createBus(data: {
