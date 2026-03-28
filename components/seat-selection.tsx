@@ -164,12 +164,24 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
     }
   };
 
-  const handleNext = async () => {
-    if (currentStep === 1 && !selectedSeat) return;
-    if (currentStep === 2 && !isAuthenticated) {
+  const handleViewSeats = () => {
+    if (!isAuthenticated) {
       setShowAuthForm(true);
+      setIsOpen(true);
+      setCurrentStep(1);
+      setSelectedSeat(null);
+      setBookingStatus(null);
       return;
     }
+    setIsOpen(true);
+    setCurrentStep(1);
+    setSelectedSeat(null);
+    setShowAuthForm(false);
+    setBookingStatus(null);
+  };
+
+  const handleNext = async () => {
+    if (currentStep === 1 && !selectedSeat) return;
     if (currentStep < 3) {
       setCurrentStep((step) => step + 1);
       return;
@@ -180,19 +192,49 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
   return (
     <>
       <button
-        onClick={() => {
-          setIsOpen(true);
-          setCurrentStep(1);
-          setSelectedSeat(null);
-          setShowAuthForm(false);
-          setBookingStatus(null);
-        }}
-        className="rounded-full bg-[#ed3d34] px-5 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-white transition hover:bg-[#c12b30]"
+        onClick={handleViewSeats}
+        className="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-red-700"
       >
-        View seats
+        Book Now
       </button>
 
-      {isOpen && (
+      {isOpen && !isAuthenticated && (
+        <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center overflow-auto bg-black/70 p-4 py-6">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-slate-400">Login Required</p>
+                <h2 className="text-xl font-semibold text-slate-900">Sign in to continue</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setShowAuthForm(false);
+                }}
+                className="text-sm font-semibold text-slate-500 hover:text-slate-900"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
+                <p className="font-semibold">🔐 Secure Booking</p>
+                <p className="mt-1 text-blue-700">Please sign in or create an account to book your seats. This helps us track your bookings and provide better service.</p>
+              </div>
+
+              <PassengerAuthForm
+                onSuccess={(session) => {
+                  setSession(session);
+                  setShowAuthForm(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isOpen && isAuthenticated && (
         <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center overflow-auto bg-black/70 p-4 py-6">
           <div className="w-full max-w-5xl overflow-hidden rounded-[32px] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div className="flex items-center justify-between border-b border-stone-200 px-6 py-4">
@@ -288,46 +330,6 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
                           {point}
                         </div>
                       ))}
-                    </div>
-                  </div>
-                )}
-
-                {!isAuthenticated && currentStep >= 2 && (
-                  <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm text-amber-700">
-                    <p className="text-xs uppercase tracking-[0.35em]">Track your booking</p>
-                    <p className="mt-1 text-[0.8rem] text-stone-600">
-                      Sign in or register so we can save this booking for you.
-                    </p>
-                    {showAuthForm ? (
-                      <PassengerAuthForm
-                        onSuccess={(session) => {
-                          setSession(session);
-                          setShowAuthForm(false);
-                          setCurrentStep(3);
-                        }}
-                      />
-                    ) : (
-                      <button
-                        onClick={() => setShowAuthForm(true)}
-                        className="mt-3 rounded-2xl border border-amber-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-amber-700"
-                      >
-                        Sign in / Sign up
-                      </button>
-                    )}
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[0.65rem] uppercase tracking-[0.35em]">
-                      <Link
-                        href="/passenger/login"
-                        className="rounded-full border border-amber-400/80 px-3 py-1 text-[0.6rem] font-semibold text-amber-700"
-                      >
-                        Login page
-                      </Link>
-                      <span className="text-amber-500">or</span>
-                      <Link
-                        href="/passenger/register"
-                        className="rounded-full border border-amber-400/80 px-3 py-1 text-[0.6rem] font-semibold text-amber-700"
-                      >
-                        Create account
-                      </Link>
                     </div>
                   </div>
                 )}
