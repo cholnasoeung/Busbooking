@@ -1,11 +1,12 @@
 import { PassengerLoginClient } from "./client";
+import { sanitizePassengerRedirect } from "@/lib/passenger-management";
 
 type PassengerLoginPageProps = {
   searchParams?: { redirect?: string };
 };
 
 export default function PassengerLoginPage({ searchParams }: PassengerLoginPageProps) {
-  const redirectTo = searchParams?.redirect ?? "/search";
+  const redirectTo = sanitizePassengerRedirect(searchParams?.redirect);
 
   return (
     <section className="flex min-h-[60vh] items-center justify-center">

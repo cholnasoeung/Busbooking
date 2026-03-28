@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type SearchFormProps = {
@@ -22,37 +22,31 @@ export function SearchForm({
 }: SearchFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [from, setFrom] = useState(selectedFrom);
-  const [to, setTo] = useState(selectedTo);
-  const [date, setDate] = useState(selectedDateValue);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    setFrom(selectedFrom);
-    setTo(selectedTo);
-    setDate(selectedDateValue);
-  }, [selectedFrom, selectedTo, selectedDateValue]);
+  const currentFrom = fromCities.includes(selectedFrom) ? selectedFrom : fromCities[0] ?? selectedFrom;
+  const currentTo = toCities.includes(selectedTo) ? selectedTo : toCities[0] ?? selectedTo;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const pushSearch = (from: string, to: string, date: string) => {
     const params = new URLSearchParams({ from, to, date });
 
-    // Preserve active filter
     if (activeFilter) params.set("filter", activeFilter);
 
-    // Preserve time slots
     const timeSlots = searchParams.get("timeSlots");
     if (timeSlots) params.set("timeSlots", timeSlots);
 
-    router.push(`/search?${params.toString()}`);
+    startTransition(() => {
+      router.push(`/search?${params.toString()}`);
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[140px]">
           <select
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            value={currentFrom}
+            onChange={(event) => pushSearch(event.target.value, currentTo, selectedDateValue)}
             className="w-full rounded-lg border border-slate-200 px-4 py-2.5 pr-10 text-sm font-semibold text-slate-700 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100 appearance-none bg-white"
           >
             {fromCities.map((c) => (
@@ -70,11 +64,7 @@ export function SearchForm({
 
         <button
           type="button"
-          onClick={() => {
-            const temp = from;
-            setFrom(to);
-            setTo(temp);
-          }}
+          onClick={() => pushSearch(currentTo, currentFrom, selectedDateValue)}
           className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
           title="Swap cities"
         >
@@ -85,8 +75,8 @@ export function SearchForm({
 
         <div className="relative flex-1 min-w-[140px]">
           <select
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
+            value={currentTo}
+            onChange={(event) => pushSearch(currentFrom, event.target.value, selectedDateValue)}
             className="w-full rounded-lg border border-slate-200 px-4 py-2.5 pr-10 text-sm font-semibold text-slate-700 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100 appearance-none bg-white"
           >
             {toCities.map((c) => (
@@ -104,18 +94,19 @@ export function SearchForm({
 
         <input
           type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          value={selectedDateValue}
+          onChange={(event) => pushSearch(currentFrom, currentTo, event.target.value)}
           className="flex-1 min-w-[140px] rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100"
         />
 
         <button
-          type="submit"
-          className="rounded-lg bg-red-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-red-700 hover:shadow-md"
+          type="button"
+          disabled
+          className="rounded-lg bg-red-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm"
         >
-          Search
+          {isPending ? "Updating..." : "Auto update"}
         </button>
       </div>
-    </form>
+    </div>
   );
 }

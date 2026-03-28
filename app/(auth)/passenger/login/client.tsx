@@ -19,7 +19,7 @@ export function PassengerLoginClient({ redirectTo }: PassengerLoginClientProps) 
         Keep your upcoming trips in one place and start seat selection immediately after auth.
       </p>
       <div className="mt-6">
-        <PassengerAuthForm onSuccess={setSession} redirectTo={redirectTo} />
+        <PassengerAuthForm onSuccess={setSession} redirectTo={redirectTo} defaultMode="login" />
       </div>
       <p className="mt-4 text-[0.75rem] text-stone-500">
         Need an account?

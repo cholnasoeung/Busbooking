@@ -1,4 +1,4 @@
-import { OptionalUnlessRequiredId } from "mongodb";
+import { Filter, OptionalUnlessRequiredId } from "mongodb";
 
 import clientPromise from "@/lib/mongodb";
 import { blockSeats } from "@/lib/operator-inventory";
@@ -7,6 +7,7 @@ export type PassengerStatus = "booked" | "checked_in" | "boarded" | "cancelled" 
 
 export type PassengerRecord = {
   id: string;
+  passengerAccountId?: string;
   fullName: string;
   email: string;
   phone: string;
@@ -41,6 +42,7 @@ export type BookingRecord = {
 };
 
 export type BookingPassengerInput = {
+  passengerAccountId?: string;
   fullName: string;
   email: string;
   phone: string;
@@ -61,6 +63,25 @@ export type BookingCreationPayload = {
   arrivalTime: string;
   fare: number;
   passenger: BookingPassengerInput;
+};
+
+export type PassengerBookingSummary = {
+  bookingId: string;
+  passengerRecordId: string;
+  routeName: string;
+  origin: string;
+  destination: string;
+  tripDate: string;
+  departureTime: string;
+  arrivalTime: string;
+  bookingStatus: BookingRecord["status"];
+  passengerStatus: PassengerStatus;
+  seat: string;
+  farePaid: number;
+  boardingPoint?: string;
+  droppingPoint?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 const DB_NAME = process.env.MONGODB_DB_NAME ?? "bus_booking";
@@ -170,6 +191,14 @@ function normalizeSeat(value?: string) {
   return value.trim().toUpperCase();
 }
 
+function normalizeEmail(value?: string) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function serializeDate(value: Date) {
+  return value.toISOString();
+}
+
 function isMatchingTripDate(candidate: Date, target: Date) {
   return Math.abs(candidate.getTime() - target.getTime()) < 1000 * 60;
 }
@@ -217,8 +246,9 @@ export async function createBooking(data: BookingCreationPayload) {
     passengers: [
       {
         id: generateId("PASS"),
+        passengerAccountId: data.passenger.passengerAccountId,
         fullName: data.passenger.fullName,
-        email: data.passenger.email,
+        email: normalizeEmail(data.passenger.email),
         phone: data.passenger.phone,
         seat: data.passenger.seat,
         status: "booked",
@@ -267,6 +297,65 @@ export async function listBookedSeats(params: {
     .flatMap((record) => record.passengers.map((passenger) => normalizeSeat(passenger.seat)));
 
   return Array.from(new Set(normalizedSeats.filter(Boolean)));
+}
+
+export async function listPassengerBookings(
+  passengerAccountId: string,
+  email?: string
+): Promise<PassengerBookingSummary[]> {
+  const normalizedEmail = normalizeEmail(email);
+  const db = await getDb();
+  const filters: Filter<BookingRecord>[] = [];
+
+  if (passengerAccountId) {
+    filters.push({ "passengers.passengerAccountId": passengerAccountId });
+  }
+
+  if (normalizedEmail) {
+    filters.push({ "passengers.email": normalizedEmail });
+  }
+
+  if (filters.length === 0) {
+    return [];
+  }
+
+  const query: Filter<BookingRecord> =
+    filters.length === 1 ? filters[0] : { $or: filters };
+
+  const records = await db
+    .collection<BookingRecord>(COLLECTION_NAME)
+    .find(query)
+    .sort({ tripDate: -1, departureTime: -1 })
+    .toArray();
+
+  return records.flatMap((record) =>
+    record.passengers
+      .filter((passenger) => {
+        if (passengerAccountId && passenger.passengerAccountId === passengerAccountId) {
+          return true;
+        }
+
+        return normalizedEmail !== "" && normalizeEmail(passenger.email) === normalizedEmail;
+      })
+      .map((passenger) => ({
+        bookingId: record.id,
+        passengerRecordId: passenger.id,
+        routeName: record.routeName,
+        origin: record.origin,
+        destination: record.destination,
+        tripDate: serializeDate(record.tripDate),
+        departureTime: record.departureTime,
+        arrivalTime: record.arrivalTime,
+        bookingStatus: record.status,
+        passengerStatus: passenger.status,
+        seat: passenger.seat,
+        farePaid: passenger.farePaid ?? 0,
+        boardingPoint: passenger.boardingPoint,
+        droppingPoint: passenger.droppingPoint,
+        createdAt: serializeDate(record.createdAt),
+        updatedAt: serializeDate(record.updatedAt),
+      }))
+  );
 }
 
 function findPassengerIndex(passengers: PassengerRecord[], passengerId: string) {

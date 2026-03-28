@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createBooking, type BookingCreationPayload } from "@/lib/operator-bookings";
+import {
+  getPassengerSessionFromCookies,
+  touchPassengerLastBooking,
+} from "@/lib/passenger-management";
 
 export async function POST(request: NextRequest) {
   try {
+    const passengerSession = await getPassengerSessionFromCookies(request.cookies);
+    if (!passengerSession) {
+      return NextResponse.json(
+        { message: "Please sign in to save your booking." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json({ message: "Invalid payload." }, { status: 400 });
@@ -15,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const passenger = body.passenger ?? {};
-    if (!passenger.fullName || !passenger.email || !passenger.phone || !passenger.seat) {
+    if (!passenger.seat) {
       return NextResponse.json({ message: "Passenger information is incomplete." }, { status: 400 });
     }
 
@@ -31,9 +43,10 @@ export async function POST(request: NextRequest) {
       arrivalTime: String(body.arrivalTime ?? ""),
       fare: Number(body.fare ?? 0) || 0,
       passenger: {
-        fullName: String(passenger.fullName),
-        email: String(passenger.email),
-        phone: String(passenger.phone),
+        passengerAccountId: passengerSession.id,
+        fullName: String(passenger.fullName ?? passengerSession.fullName).trim() || passengerSession.fullName,
+        email: passengerSession.email,
+        phone: String(passenger.phone ?? passengerSession.phone).trim() || passengerSession.phone,
         seat: String(passenger.seat),
         boardingPoint: passenger.boardingPoint ? String(passenger.boardingPoint) : undefined,
         droppingPoint: passenger.droppingPoint ? String(passenger.droppingPoint) : undefined,
@@ -41,6 +54,7 @@ export async function POST(request: NextRequest) {
     };
 
     await createBooking(payload);
+    await touchPassengerLastBooking(passengerSession.id);
 
     return NextResponse.json({ message: "Booking recorded. Check your passenger account for details." });
   } catch (error) {

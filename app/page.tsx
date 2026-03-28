@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { busTypeCatalog, listOperatorBuses } from "@/lib/operator-bus-management";
 import { listOperatorRoutes } from "@/lib/operator-route-management";
-import { formatDate } from "@/lib/display-utils";
 
 // Helper for bus type labels
 const typeLabelLookup = Object.fromEntries(

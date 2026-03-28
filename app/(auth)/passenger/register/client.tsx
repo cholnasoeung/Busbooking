@@ -19,7 +19,7 @@ export function PassengerRegisterClient({ redirectTo }: PassengerRegisterClientP
         Save this booking to your profile and pick up from where you left off later.
       </p>
       <div className="mt-6">
-        <PassengerAuthForm onSuccess={setSession} redirectTo={redirectTo} />
+        <PassengerAuthForm onSuccess={setSession} redirectTo={redirectTo} defaultMode="signup" />
       </div>
       <p className="mt-4 text-[0.75rem] text-stone-500">
         Already have an account?

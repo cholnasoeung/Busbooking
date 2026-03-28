@@ -2,7 +2,11 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 import Link from "next/link";
-import { busTypeCatalog, listOperatorBuses } from "@/lib/operator-bus-management";
+import {
+  busTypeCatalog,
+  listOperatorBuses,
+  type BusRecord,
+} from "@/lib/operator-bus-management";
 import {
   listOperatorRoutes,
   listTripSchedules,
@@ -147,12 +151,12 @@ export default async function SearchPage({ searchParams }: { searchParams?: Sear
       };
     }
     if ("busTypes" in payload) {
-      return (trip: TripRecord, bus: any) => {
+      return (trip: TripRecord, bus?: BusRecord) => {
         // For schedule trips without bus data, check the driver vehicle field
         if (!bus) {
           const vehicleName = trip.driver?.vehicle || "";
           // Try to find matching bus by vehicle name
-          const matchedBus = buses.find(b => b.name === vehicleName);
+          const matchedBus = buses.find((b) => b.name === vehicleName);
           if (matchedBus) {
             return payload.busTypes.includes(matchedBus.type ?? "");
           }

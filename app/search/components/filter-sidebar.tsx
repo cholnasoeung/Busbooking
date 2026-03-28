@@ -1,14 +1,14 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 type SerializedSearchFilter = {
   id: string;
   label: string;
   description?: string;
   type: string;
-  payload: any;
+  payload: Record<string, unknown>;
 };
 
 type FilterSidebarProps = {

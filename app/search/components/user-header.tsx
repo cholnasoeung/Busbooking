@@ -36,13 +36,15 @@ export function UserHeader() {
       </div>
       <div className="flex items-center gap-2">
         <Link
-          href="/passenger/bookings"
+          href="/passenger/profile"
           className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
-          My Bookings
+          Profile & Bookings
         </Link>
         <button
-          onClick={clearSession}
+          onClick={() => {
+            void clearSession();
+          }}
           className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
           Logout

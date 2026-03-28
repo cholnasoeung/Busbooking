@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { BusRecord } from "@/lib/operator-bus-management";
@@ -35,7 +34,6 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
-  const [showAuthForm, setShowAuthForm] = useState(false);
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
   const [bookingStatus, setBookingStatus] = useState<
     { type: "success" | "error"; message: string } | null
@@ -166,7 +164,6 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
 
   const handleViewSeats = () => {
     if (!isAuthenticated) {
-      setShowAuthForm(true);
       setIsOpen(true);
       setCurrentStep(1);
       setSelectedSeat(null);
@@ -176,7 +173,6 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
     setIsOpen(true);
     setCurrentStep(1);
     setSelectedSeat(null);
-    setShowAuthForm(false);
     setBookingStatus(null);
   };
 
@@ -209,7 +205,6 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  setShowAuthForm(false);
                 }}
                 className="text-sm font-semibold text-slate-500 hover:text-slate-900"
               >
@@ -223,13 +218,12 @@ export function SeatSelection({ trip, bus, price, origin, destination }: SeatSel
                 <p className="mt-1 text-blue-700">Please sign in or create an account to book your seats. This helps us track your bookings and provide better service.</p>
               </div>
 
-              <PassengerAuthForm
-                onSuccess={(session) => {
-                  setSession(session);
-                  setShowAuthForm(false);
-                }}
-              />
-            </div>
+                <PassengerAuthForm
+                  onSuccess={(session) => {
+                    setSession(session);
+                  }}
+                />
+              </div>
           </div>
         </div>
       )}
