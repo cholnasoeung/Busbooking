@@ -20,6 +20,12 @@ function formatDateLabel(value?: Date) {
 
 export function ScheduleLibrary({ routes, schedules }: ScheduleLibraryProps) {
   const routeMap = new Map(routes.map((route) => [route.id, route]));
+  
+  // Remove duplicate schedules by creating a Map with schedule.id as the key
+  // This ensures each schedule appears only once in the list
+  const uniqueSchedules = Array.from(
+    new Map(schedules.map(schedule => [schedule.id, schedule])).values()
+  );
 
   return (
     <section className="rounded-[28px] border border-white/10 bg-stone-900/50 p-6 shadow">
@@ -31,17 +37,17 @@ export function ScheduleLibrary({ routes, schedules }: ScheduleLibraryProps) {
           </p>
         </div>
         <span className="rounded-full border border-white/10 px-3 py-1 text-[0.65rem] uppercase tracking-[0.3em] text-stone-400">
-          {schedules.length} live
+          {uniqueSchedules.length} live
         </span>
       </div>
 
       <div className="mt-5 space-y-3">
-        {schedules.length === 0 ? (
+        {uniqueSchedules.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-5 text-sm text-stone-400">
             No schedules published yet.
           </div>
         ) : (
-          schedules.map((schedule) => {
+          uniqueSchedules.map((schedule) => {
             const route = routeMap.get(schedule.routeId);
 
             return (
@@ -75,11 +81,11 @@ export function ScheduleLibrary({ routes, schedules }: ScheduleLibraryProps) {
                   ) : null}
                 </div>
 
-                <p className="mt-3 text-xs text-stone-400">
+                <p className="mt-3 text-xs text-stone-400" suppressHydrationWarning>
                   Active from {schedule.startDate.toLocaleDateString()} until{" "}
                   {formatDateLabel(schedule.endDate)}
                 </p>
-                <form action={deleteScheduleAction} method="post" className="mt-3 text-xs">
+                <form action={deleteScheduleAction} className="mt-3 text-xs">
                   <input type="hidden" name="scheduleId" value={schedule.id} />
                   <button
                     type="submit"

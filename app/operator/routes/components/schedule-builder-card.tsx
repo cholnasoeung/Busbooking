@@ -24,7 +24,7 @@ export function ScheduleBuilderCard({ routes }: ScheduleBuilderCardProps) {
         </span>
       </div>
 
-      <form action={createScheduleAction} method="post" className="mt-5 grid gap-4 text-xs">
+      <form action={createScheduleAction} className="mt-5 grid gap-4 text-xs">
         <label className="grid gap-2 text-stone-300">
           Route
           <select

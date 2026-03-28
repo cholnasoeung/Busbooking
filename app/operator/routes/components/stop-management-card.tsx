@@ -27,7 +27,6 @@ export function StopManagementCard({ routes }: StopManagementCardProps) {
       <div className="mt-5 grid gap-4">
         <form
           action={addBoardingPointAction}
-          method="post"
           className="rounded-3xl border border-white/10 bg-stone-900/60 p-4 text-xs text-stone-300"
         >
           <p className="text-sm font-semibold text-white">Add boarding point</p>
@@ -67,7 +66,6 @@ export function StopManagementCard({ routes }: StopManagementCardProps) {
 
         <form
           action={addDropPointAction}
-          method="post"
           className="rounded-3xl border border-white/10 bg-stone-900/60 p-4 text-xs text-stone-300"
         >
           <p className="text-sm font-semibold text-white">Add drop point</p>

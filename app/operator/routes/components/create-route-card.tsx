@@ -22,7 +22,7 @@ export function CreateRouteCard({ cityOptions }: CreateRouteCardProps) {
         </span>
       </div>
 
-      <form action={createRouteAction} method="post" className="mt-5 grid gap-4 text-xs">
+      <form action={createRouteAction} className="mt-5 grid gap-4 text-xs">
         <input type="hidden" name="operatorId" value="OP-201" />
 
         <label className="grid gap-2 text-stone-300">

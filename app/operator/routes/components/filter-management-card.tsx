@@ -34,7 +34,7 @@ export function FilterManagementCard({ filters }: FilterManagementCardProps) {
         </span>
       </div>
 
-      <form action={createSearchFilterAction} method="post" className="mt-5 grid gap-3 text-xs text-stone-300">
+      <form action={createSearchFilterAction} className="mt-5 grid gap-3 text-xs text-stone-300">
         <label className="grid gap-2 text-stone-200">
           Label
           <input
@@ -102,7 +102,7 @@ export function FilterManagementCard({ filters }: FilterManagementCardProps) {
                     {filter.description ?? filter.type}
                   </p>
                 </div>
-                <form action={deleteSearchFilterAction} method="post" className="text-xs">
+                <form action={deleteSearchFilterAction} className="text-xs">
                   <input type="hidden" name="filterId" value={filter.id} />
                   <button
                     type="submit"

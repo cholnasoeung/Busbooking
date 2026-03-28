@@ -77,7 +77,6 @@ export function RoutesLibrary({ routes }: RoutesLibraryProps) {
                 </div>
                 <form
                   action={deleteRouteAction}
-                  method="post"
                   className="mt-4 text-xs"
                 >
                   <input type="hidden" name="routeId" value={route.id} />

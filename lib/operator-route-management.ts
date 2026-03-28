@@ -122,8 +122,19 @@ async function getDb() {
   return client.db(dbName);
 }
 
+const SEED_STATE_KEY = "operator_route_management_seeded";
+
+type FirstUseMarker = {
+  key: string;
+  seededAt: Date;
+};
+
 async function ensureSeeds() {
   const db = await getDb();
+  const marker = await db.collection<FirstUseMarker>("seed_state").findOne({ key: SEED_STATE_KEY });
+  if (marker) {
+    return;
+  }
 
   await Promise.all([
     ...routeSeed.map((seed) =>
@@ -141,6 +152,11 @@ async function ensureSeeds() {
       )
     ),
   ]);
+
+  await db.collection<FirstUseMarker>("seed_state").insertOne({
+    key: SEED_STATE_KEY,
+    seededAt: new Date(),
+  });
 }
 
 function buildId(prefix: string) {
